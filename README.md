@@ -1,0 +1,4 @@
+Felipe Burmann e Francisco Braga
+
+
+O objetivo é criar uma rede social simplificada chamada MiniRede. A maior restrição do trabalho é que deve-se usar o C++, mas é estritamente proibido usar a STL (Standard Template Library).
