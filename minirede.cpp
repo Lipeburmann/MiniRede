@@ -363,7 +363,50 @@ void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& s
 }
 
 void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
-    // TODO
+    // 1. Busca o usuário dono da fila de notificações
+    Usuario* usuario = UsuarioPorId(rede, idUsuario);
+    
+    if (usuario == nullptr) {
+        saida << "ERROR USER_NOT_FOUND\n";
+        return;
+    }
+
+    // 2. Imprime o início do bloco de notificações
+    saida << "NOTIFICATIONS_BEGIN\n";
+
+    int contador = 0;
+
+    // 3. Loop: remove enquanto não atingir 'k' E a fila não estiver vazia
+    while (contador < k && usuario->filaNotif.inicio != nullptr) {
+        
+        // Pega o primeiro nó (o início da fila)
+        Notificacao* noRemovido = usuario->filaNotif.inicio;
+        
+        // 4. Verifica o tipo da notificação para imprimir no formato correto
+        if (noRemovido->tipo == NOTIF_FOLLOW) {
+            saida << "FOLLOW " << noRemovido->idOrigem << "\n";
+        } 
+        else if (noRemovido->tipo == NOTIF_LIKE) {
+            saida << "LIKE " << noRemovido->idOrigem << " " << noRemovido->idPost << "\n";
+        }
+
+        // Avança o início da fila para o próximo nó
+        usuario->filaNotif.inicio = usuario->filaNotif.inicio->prox;
+        
+        // Se a fila ficou vazia após o avanço, o 'fim' também precisa apontar para nullptr
+        if (usuario->filaNotif.inicio == nullptr) {
+            usuario->filaNotif.fim = nullptr;
+        }
+
+        // 5. Deleta o nó antigo da memória
+        delete noRemovido;
+
+        // Incrementa o contador para não rodar mais do que 'k' vezes
+        contador++;
+    }
+
+    // 6. Imprime o fim do bloco
+    saida << "NOTIFICATIONS_END\n";
 }
 
 void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
