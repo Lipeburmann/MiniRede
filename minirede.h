@@ -54,8 +54,7 @@ struct NoUsuarioHash {
 struct MiniRede {
     NoUsuarioBST* raizUsuarios; 
     NoUsuarioHash* hashUsernames[TAM_HASH]; // O tamanho da hash pode ser um número primo
-    Publicacao* listaPublicacoes; // Lista encadeada simples com todos os posts globais
-    int tamanhoHash;              // Ex: 1009 (um número primo)
+    Publicacao* listaPublicacoes; // Lista encadeada simples com todos os posts globais             
 };
 
 void inicializarMiniRede(MiniRede& rede);
