@@ -217,7 +217,7 @@ void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& s
     post->curtidas++;
 
     IntNode* nova_curtida = new IntNode;
-    nova_curtida->id = idUsuario
+    nova_curtida->id = idUsuario;
     nova_curtida->prox = post->listaCurtidas;
     post->listaCurtidas = nova_curtida;
 }
