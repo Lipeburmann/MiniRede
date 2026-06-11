@@ -10,9 +10,6 @@ const int TAM_NOME = 100;
 const int TAM_TEXTO = 280;
 const int TAM_COMANDO = 30;
 const int TAM_HASH = 167;
-// TODO: definir as structs principais do trabalho.
-//
-// Sugestao de structs que provavelmente serao necessarias:
 
 // Nó genérico de lista encadeada para guardar IDs (útil para Seguidores, Curtidas, etc)
 struct IntNode {
