@@ -2,6 +2,8 @@
 #define MINI_REDE_H
 
 #include <iostream>
+#include <cstring>
+
 
 const int TAM_USERNAME = 50;
 const int TAM_NOME = 100;
