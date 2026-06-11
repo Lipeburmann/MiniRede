@@ -232,36 +232,33 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
 }
 
 void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
-    // 1. Tenta achar o usuário que queremos consultar
     Usuario* usuario = UsuarioPorId(rede, idUsuario);
     
     if (usuario == nullptr) {
-        saida << "ERROR USER_NOT_FOUND\n"; // 
+        saida << "ERROR USER_NOT_FOUND\n"; 
         return;
     }
 
-    // 2. Imprime o começo da lista
     saida << "FOLLOWING_BEGIN\n";
 
-    // 3. Pega o primeiro nó da lista de seguidos desse usuário
     IntNode* atual = usuario->seguidos;
     
-    // 4. Percorre a lista até o final
     while (atual != nullptr) {
-        // Pega as informações completas do usuário seguido usando o ID dele
-        Usuario* seguido = UsuarioPorId(rede, atual->id);
+        // NOME NOVO E CLARO AQUI:
+        // Pega o ID da lista e acha o objeto completo daquele usuário
+        Usuario* usuarioEncontrado = UsuarioPorId(rede, atual->id);
         
-        if (seguido != nullptr) {
-            saida << "USER " << seguido->id << " " 
-                  << seguido->username << " " 
-                  << seguido->nomeCompleto << "\n";
+        if (usuarioEncontrado != nullptr) {
+            // Imprime os dados usando a nova variável
+            saida << "USER " << usuarioEncontrado->id << " " 
+                  << usuarioEncontrado->username << " " 
+                  << usuarioEncontrado->nomeCompleto << "\n";
         }
         
-        // Pula para o próximo ID da lista encadeada
+        // Pula para o próximo ID da lista
         atual = atual->prox;
     }
 
-    // 5. Imprime o fim da lista
     saida << "FOLLOWING_END\n";
 }
 
