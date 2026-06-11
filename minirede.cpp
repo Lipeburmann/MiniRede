@@ -176,7 +176,7 @@ void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp,
     Publicacao* nova = new Publicacao;
     nova->id = idPost;
     nova->curtidas = 0;
-    nova->id = idAutor;
+    nova->idAutor = idAutor;
     nova->timestamp = timestamp;
     nova->texto = texto;
     nova->listaCurtidas = nullptr;
@@ -217,7 +217,7 @@ void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& s
     post->curtidas++;
 
     IntNode* nova_curtida = new IntNode;
-    nova_curtida->id = idUsuario;
+    nova_curtida->id = idUsuario
     nova_curtida->prox = post->listaCurtidas;
     post->listaCurtidas = nova_curtida;
 }
