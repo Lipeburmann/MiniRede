@@ -173,23 +173,41 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
 }
 
 void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream& saida) {
+    // 1. Verificar se o autor existe ANTES de criar o post 
+    Usuario* autor = UsuarioPorId(rede, idAutor);
+    if (autor == nullptr) {
+        saida << "ERROR USER_NOT_FOUND\n"; // 
+        return;
+    }
+
+    // 2. Verificar se o ID do post já existe na rede 
+    Publicacao* postExistente = AcharPublicacaoPorId(rede, idPost);
+    if (postExistente != nullptr) {
+        saida << "ERROR POST_EXISTS\n"; // 
+        return;
+    }
+
+    // 3. Se passou pelas validações, podemos criar o post na memória
     Publicacao* nova = new Publicacao;
     nova->id = idPost;
     nova->curtidas = 0;
     nova->idAutor = idAutor;
     nova->timestamp = timestamp;
-    nova->texto = texto;
+    strcpy(nova->texto, texto); // CORREÇÃO: Copiando a string corretamente
     nova->listaCurtidas = nullptr;
+    
+    // Inserir na lista global da rede
     nova->prox = rede.listaPublicacoes;
     rede.listaPublicacoes = nova; 
 
-    Usuario* autor = UsuarioPorId(rede, idAutor);
-    if (autor != nullptr) {
-        IntNode* novoPost = new IntNode;
-        novoPost->id = idPost;
-        novoPost->prox = autor->postsCriados;
-        autor->postsCriados = novoPost;
-    }
+    // Inserir na lista de posts do autor
+    IntNode* novoPost = new IntNode;
+    novoPost->id = idPost;
+    novoPost->prox = autor->postsCriados;
+    autor->postsCriados = novoPost;
+    
+    // 4. Imprimir sucesso! 
+    saida << "POST_ADDED\n";
 }
 
 void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida) {
