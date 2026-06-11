@@ -10,8 +10,9 @@ void inicializarMiniRede(MiniRede& rede) {
         rede.hashUsernames[i] = nullptr;
     }
 }
-//Ela vai pegar o texto do username, somar os valores das letras e dividir pelo tamanho do vetor (101), pegando o resto da divisão
+
 int calcularHash(const char username[]) {
+//Ela vai pegar o texto do username, somar os valores das letras e dividir pelo tamanho do vetor (101), pegando o resto da divisão
     int hash = 0;
     for (int i = 0; username[i] != '\0'; i++) {
         hash = (hash + username[i]) % TAM_HASH;
