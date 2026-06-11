@@ -20,6 +20,28 @@ struct IntNode {
     IntNode* prox;
 };
 
+// Estrutura para as Notificações
+enum TipoNotificacao {
+    NOTIF_FOLLOW,
+    NOTIF_LIKE
+};
+
+struct Notificacao {
+    // Pode ser "FOLLOW" ou "LIKE"
+    TipoNotificacao tipo;
+    int idOrigem;
+    int idPost; // Só usado se for curtida
+    Notificacao* prox;
+};
+
+// Fila baseada em lista encadeada para cada usuário
+struct FilaNotificacoes {
+    Notificacao* inicio;
+    Notificacao* fim;
+};
+
+
+
 struct Usuario {
     int id;
     char username[TAM_USERNAME];
@@ -51,25 +73,7 @@ struct NoUsuarioHash {
     Usuario* user;
     NoUsuarioHash* prox;
 };
-// Estrutura para as Notificações
-enum TipoNotificacao {
-    NOTIF_FOLLOW,
-    NOTIF_LIKE
-};
 
-struct Notificacao {
-    // Pode ser "FOLLOW" ou "LIKE"
-    TipoNotificacao tipo;
-    int idOrigem;
-    int idPost; // Só usado se for curtida
-    Notificacao* prox;
-};
-
-// Fila baseada em lista encadeada para cada usuário
-struct FilaNotificacoes {
-    Notificacao* inicio;
-    Notificacao* fim;
-};
 // Os campos de cada struct fazem parte do projeto dos alunos.
 
 struct MiniRede {
