@@ -11,6 +11,13 @@ const int TAM_HASH = 167;
 // TODO: definir as structs principais do trabalho.
 //
 // Sugestao de structs que provavelmente serao necessarias:
+
+// Nó genérico de lista encadeada para guardar IDs (útil para Seguidores, Curtidas, etc)
+struct IntNode {
+    int id;
+    IntNode* prox;
+};
+
 struct Usuario {
     int id;
     char username[TAM_USERNAME];
@@ -31,11 +38,6 @@ struct Publicacao {
     Publicacao* prox;       // Caso decida guardar as publicações em uma lista global
 };
 
-// Nó genérico de lista encadeada para guardar IDs (útil para Seguidores, Curtidas, etc)
-struct IntNode {
-    int id;
-    IntNode* prox;
-};
 // - nos para arvore binaria de usuarios por id
 struct NoUsuarioBST {
     Usuario* user;
@@ -47,8 +49,25 @@ struct NoUsuarioHash {
     Usuario* user;
     NoUsuarioHash* prox;
 };
-// - nos para fila de notificacoes
-//
+// Estrutura para as Notificações
+enum TipoNotificacao {
+    NOTIF_FOLLOW,
+    NOTIF_LIKE
+};
+
+struct Notificacao {
+    // Pode ser "FOLLOW" ou "LIKE"
+    TipoNotificacao tipo;
+    int idOrigem;
+    int idPost; // Só usado se for curtida
+    Notificacao* prox;
+};
+
+// Fila baseada em lista encadeada para cada usuário
+struct FilaNotificacoes {
+    Notificacao* inicio;
+    Notificacao* fim;
+};
 // Os campos de cada struct fazem parte do projeto dos alunos.
 
 struct MiniRede {
