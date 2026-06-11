@@ -1,2 +1,12 @@
+# Ignorar arquivos executáveis do Windows
 *.exe
-minirede
+# Ignorar arquivos de objeto (gerados na compilação)
+*.o
+
+# Ignorar pastas de configuração do seu editor de código (VS Code, etc)
+.vscode/
+.idea/
+
+# Ignorar lixos do sistema operacional
+.DS_Store
+Thumbs.db
