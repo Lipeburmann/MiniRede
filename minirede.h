@@ -99,8 +99,11 @@ void listarTopPosts(MiniRede& rede, int k, std::ostream& saida);
 //
 // Exemplos de responsabilidades auxiliares:
 // - buscar usuario por id
+Usuario* UsuarioPorId(MiniRede& rede, int id);
 // - buscar usuario por username
+Usuario* UsuarioPorUsername(MiniRede& rede, const char username[]);
 // - buscar publicacao por id
+Publicacao* AcharPublicacaoPorId(MiniRede& rede, int idPost);
 // - inserir/listar/liberar arvore
 // - inserir/buscar/liberar tabela hash
 // - enfileirar/desenfileirar notificacoes
