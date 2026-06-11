@@ -211,14 +211,21 @@ void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp,
 }
 
 void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida) {
-    // achar post
+    // 1. Verificar se o usuário que está curtindo existe ANTES de tudo
+    Usuario* userCurtindo = UsuarioPorId(rede, idUsuario);
+    if (userCurtindo == nullptr) {
+        saida << "ERROR USER_NOT_FOUND\n"; // 
+        return;
+    }
+
+    // 2. Achar post
     Publicacao* post = AcharPublicacaoPorId(rede, idPost);
     if (post == nullptr) {
-        saida << "ERROR POST_NOT_FOUND\n";
+        saida << "ERROR POST_NOT_FOUND\n"; // [cite: 81]
         return;
     }
     
-    // descobrir se já foi curtida
+    // 3. Descobrir se já foi curtida
     bool ja_curtida = false;
     IntNode* atual = post->listaCurtidas;
     while (atual != nullptr){
@@ -229,15 +236,40 @@ void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& s
         atual = atual->prox;
     }
 
-    if (ja_curtida) return;
+    if (ja_curtida) {
+        saida << "ERROR ALREADY_LIKED\n"; // 
+        return;
+    }
 
-    // curtir
+    // 4. Curtir
     post->curtidas++;
 
     IntNode* nova_curtida = new IntNode;
-    nova_curtida->id = idUsuario
+    nova_curtida->id = idUsuario; // O ponto e vírgula arrumado aqui!
     nova_curtida->prox = post->listaCurtidas;
     post->listaCurtidas = nova_curtida;
+
+    // 5. Enviar Notificação para o Autor do Post
+    Usuario* autor = UsuarioPorId(rede, post->idAutor);
+    if (autor != nullptr) {
+        Notificacao* novaNotif = new Notificacao;
+        novaNotif->tipo = NOTIF_LIKE;
+        novaNotif->idOrigem = idUsuario;
+        novaNotif->idPost = idPost;
+        novaNotif->prox = nullptr;
+
+        // Inserir no final da fila (FIFO)
+        if (autor->filaNotif.inicio == nullptr) {
+            autor->filaNotif.inicio = novaNotif;
+            autor->filaNotif.fim = novaNotif;
+        } else {
+            autor->filaNotif.fim->prox = novaNotif;
+            autor->filaNotif.fim = novaNotif;
+        }
+    }
+
+    // 6. Mensagem de Sucesso
+    saida << "LIKED\n"; // 
 }
 
 void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
