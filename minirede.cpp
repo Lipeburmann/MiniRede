@@ -1,4 +1,5 @@
 #include "minirede.h"
+#include <sstream>
 
 void inicializarMiniRede(MiniRede& rede) {
     // Garante que a árvore comece vazia
