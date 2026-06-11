@@ -244,7 +244,7 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
     IntNode* atual = usuario->seguidos;
     
     while (atual != nullptr) {
-        // NOME NOVO E CLARO AQUI:
+        
         // Pega o ID da lista e acha o objeto completo daquele usuário
         Usuario* usuarioEncontrado = UsuarioPorId(rede, atual->id);
         
