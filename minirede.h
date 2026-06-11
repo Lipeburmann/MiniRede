@@ -11,23 +11,51 @@ const int TAM_COMANDO = 30;
 // TODO: definir as structs principais do trabalho.
 //
 // Sugestao de structs que provavelmente serao necessarias:
-// - Usuario
-// - Publicacao
-// - MiniRede
-// - nos para lista encadeada
+struct Usuario {
+    int id;
+    char username[TAM_USERNAME];
+    char nomeCompleto[TAM_NOME];
+    
+    IntNode* seguindo;        // Lista de IDs de usuários que ele segue
+    IntNode* postsCriados;    // Lista de IDs dos posts que ele criou
+    FilaNotificacoes fila;    // Fila de notificações
+};
+
+struct Publicacao {
+    int id;
+    int idAutor;
+    int timestamp;
+    char texto[TAM_TEXTO];
+    int curtidas;
+    IntNode* listaCurtidas; // Lista de IDs de quem curtiu (para evitar curtida dupla)
+    Publicacao* prox;       // Caso decida guardar as publicações em uma lista global
+};
+
+// Nó genérico de lista encadeada para guardar IDs (útil para Seguidores, Curtidas, etc)
+struct IntNode {
+    int id;
+    IntNode* prox;
+};
 // - nos para arvore binaria de usuarios por id
+struct NoUsuarioBST {
+    Usuario* user;
+    NoUsuarioBST* esq;
+    NoUsuarioBST* dir;
+};
 // - nos para tabela hash de usernames
+struct NoUsuarioHash {
+    Usuario* user;
+    NoUsuarioHash* prox;
+};
 // - nos para fila de notificacoes
 //
 // Os campos de cada struct fazem parte do projeto dos alunos.
 
 struct MiniRede {
-    // TODO: declarar aqui os ponteiros/estruturas principais da rede.
-    //
-    // Exemplos de responsabilidades:
-    // - usuarios armazenados por id
-    // - usuarios acessiveis por username
-    // - publicacoes cadastradas
+    NoUsuarioBST* raizUsuarios; 
+    NoUsuarioHash* hashUsernames[TAM_HASH]; // O tamanho da hash pode ser um número primo
+    Publicacao* listaPublicacoes; // Lista encadeada simples com todos os posts globais
+    int tamanhoHash;              // Ex: 1009 (um número primo)
 };
 
 void inicializarMiniRede(MiniRede& rede);

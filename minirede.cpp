@@ -43,7 +43,41 @@ void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp,
 }
 
 void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida) {
-    // TODO
+    // achar post
+    Publicacao* post = rede.listaPublicacoes;
+    bool publicacao_existe = false;
+    while(post != nullptr){
+        if (post->id == idPost){
+            publicacao_existe = true;
+            break;
+        }
+    }
+
+    if (!publicacao_existe) return;
+    
+    // descobrir se já foi curtida
+    bool ja_curtida = false;
+    IntNode* atual = post->listaCurtidas;
+    IntNode* ultima_curtida; // para não precisar procurar de novo quando for curtir
+    while (atual != nullptr){
+        if (atual->id == idUsuario){
+            ja_curtida = true;
+            break;
+        }
+        ultima_curtida = atual;
+        atual = atual->prox;
+    }
+
+    if (ja_curtida) return;
+
+    // curtir
+    post->curtidas++;
+
+    IntNode* nova_curtida = new IntNode;
+    nova_curtida->id = idUsuario
+
+    ultima_curtida->prox = nova_curtida;
+
 }
 
 void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
