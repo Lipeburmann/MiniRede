@@ -116,51 +116,26 @@ void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char 
 
 
 void buscarUsuarioPorId(MiniRede& rede, int id, std::ostream& saida) {
-    NoUsuarioBST* atual = rede.raizUsuarios;
-    
-    // Desce na árvore procurando o ID
-    while (atual != nullptr) {
-        if (atual->user->id == id) {
-            // Encontrou! Imprime e sai da função 
-            saida << "USER " << atual->user->id << " " 
-                  << atual->user->username << " " 
-                  << atual->user->nomeCompleto << "\n";
-            return;
-        }
-        
-        // Se o ID buscado for menor, vai para a esquerda. Senão, vai para a direita.
-        if (id < atual->user->id) {
-            atual = atual->esq;
-        } else {
-            atual = atual->dir;
-        }
+    NoUsuarioBST* usuario = UsuarioPorId(rede, id);
+    if (usuario != nullptr) {
+        saida << "USER " << usuario->user->id << " " 
+              << usuario->user->username << " " 
+              << usuario->user->nomeCompleto << "\n";
+        return;
     }
-    
-    // Se o while terminar e 'atual' virar nullptr, é porque não achamos 
     saida << "ERROR USER_NOT_FOUND\n";
 }
 
 void buscarUsuarioPorUsername(MiniRede& rede, const char username[], std::ostream& saida) {
-    // Descobre o índice (a gaveta) usando a função Hash
-    int indice = calcularHash(username);
-    
-    // Pega o primeiro nó da lista encadeada daquela gaveta
-    NoUsuarioHash* atual = rede.hashUsernames[indice];
-    
-    // Percorre a lista encadeada
-    while (atual != nullptr) {
-        if (strcmp(atual->user->username, username) == 0) {
-            // Encontrou! Imprime e sai da função [cite: 42]
-            saida << "USER " << atual->user->id << " " 
-                  << atual->user->username << " " 
-                  << atual->user->nomeCompleto << "\n";
-            return;
-        }
-        atual = atual->prox;
+    Usuario* usuario = UsuarioPorUsername(rede, username);
+    if (usuario != nullptr) {
+        saida << "USER " << usuario->id << " " 
+              << usuario->username << " " 
+              << usuario->nomeCompleto << "\n";
+        return;
     }
-    
-    // Se varreu a lista toda e não achou [cite: 43]
     saida << "ERROR USER_NOT_FOUND\n";
+    
 }
 
 void imprimirArvoreInOrdem(NoUsuarioBST* no, std::ostream& saida) {
@@ -198,32 +173,41 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
 }
 
 void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream& saida) {
-    // TODO
+    Publicacao* nova = new Publicacao;
+    nova->id = idPost;
+    nova->curtidas = 0;
+    nova->id = idAutor;
+    nova->timestamp = timestamp;
+    nova->texto = texto;
+    nova->listaCurtidas = nullptr;
+    nova->prox = rede.listaPublicacoes;
+    rede.listaPublicacoes = nova; 
+
+    Usuario* autor = UsuarioPorId(rede, idAutor);
+    if (autor != nullptr) {
+        IntNode* novoPost = new IntNode;
+        novoPost->id = idPost;
+        novoPost->prox = autor->postsCriados;
+        autor->postsCriados = novoPost;
+    }
 }
 
 void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida) {
     // achar post
-    Publicacao* post = rede.listaPublicacoes;
-    bool publicacao_existe = false;
-    while(post != nullptr){
-        if (post->id == idPost){
-            publicacao_existe = true;
-            break;
-        }
+    Publicacao* post = AcharPublicacaoPorId(rede, idPost);
+    if (post == nullptr) {
+        saida << "ERROR POST_NOT_FOUND\n";
+        return;
     }
-
-    if (!publicacao_existe) return;
     
     // descobrir se já foi curtida
     bool ja_curtida = false;
     IntNode* atual = post->listaCurtidas;
-    IntNode* ultima_curtida; // para não precisar procurar de novo quando for curtir
     while (atual != nullptr){
         if (atual->id == idUsuario){
             ja_curtida = true;
             break;
         }
-        ultima_curtida = atual;
         atual = atual->prox;
     }
 
@@ -234,9 +218,8 @@ void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& s
 
     IntNode* nova_curtida = new IntNode;
     nova_curtida->id = idUsuario
-
-    ultima_curtida->prox = nova_curtida;
-
+    nova_curtida->prox = post->listaCurtidas;
+    post->listaCurtidas = nova_curtida;
 }
 
 void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
@@ -261,3 +244,48 @@ int main() {
     return 0;
 }
 
+// auxiliares
+
+Usuario* UsuarioPorId(MiniRede& rede, int id) {
+    NoUsuarioBST* atual = rede.raizUsuarios;
+    
+    while (atual != nullptr) {
+        if (atual->user->id == id) {
+            return atual->user; // Encontrou, retorna o ponteiro para o usuário
+        }
+        
+        if (id < atual->user->id) {
+            atual = atual->esq;
+        } else {
+            atual = atual->dir;
+        }
+    }
+    
+    return nullptr; // Não encontrou
+}
+
+Usuario* UsuarioPorUsername(MiniRede& rede, const char username[]) {
+    int indice = calcularHash(username);
+    NoUsuarioHash* atual = rede.hashUsernames[indice];
+    
+    while (atual != nullptr) {
+        if (strcmp(atual->user->username, username) == 0) {
+            return atual->user; // Encontrou, retorna o ponteiro para o usuário
+        }
+        atual = atual->prox;
+    }
+    
+    return nullptr; // Não encontrou
+}
+
+Publicacao* AcharPublicacaoPorId(MiniRede& rede, int idPost) {
+    Publicacao* post = rede.listaPublicacoes;
+
+    while(post != nullptr){
+        if (post->id == idPost) break;
+
+        post = post->prox;
+    }
+
+    return post;
+}
