@@ -20,6 +20,9 @@ struct IntNode {
     IntNode* prox;
 };
 
+
+////////////////////////////////////////////////////////
+//as notificações de cada usuário devem ser armazenadas na exata ordem de chegada e devem ser removidas da memória logo após serem consultadas.
 // Estrutura para as Notificações
 enum TipoNotificacao {
     NOTIF_FOLLOW,
@@ -40,7 +43,7 @@ struct FilaNotificacoes {
     Notificacao* fim;
 };
 
-
+/////////////////////////////////////////////////////
 
 struct Usuario {
     int id;
