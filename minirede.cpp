@@ -26,6 +26,66 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
     // TODO: ler comandos da entrada padrao ate END.
     // Para cada comando, chamar a funcao correspondente.
     // Nao imprimir menu, prompt ou texto extra.
+    std::string linha;
+
+    while (std::getline(entrada, linha)) {
+        if (linha.empty()) continue; // Ignora linhas em branco acidentais
+
+        std::stringstream ss(linha);
+        std::string comando;
+        ss >> comando;
+
+        if (comando == "END") {
+            break; // Encerra o processamento de comandos
+        } else if (comando == "ADD_USER") {
+            int id;
+            char username[TAM_USERNAME];
+            char nomeCompleto[TAM_NOME];
+            ss >> id >> username >> nomeCompleto;
+            cadastrarUsuario(rede, id, username, nomeCompleto, saida);
+        } else if (comando == "FIND_USER") {
+            int id;
+            ss >> id;
+            buscarUsuarioPorId(rede, id, saida);
+        } else if (comando == "FIND_USERNAME") {
+            char username[TAM_USERNAME];
+            ss >> username;
+            buscarUsuarioPorUsername(rede, username, saida);
+        } else if (comando == "LIST_USERS") {
+            listarUsuarios(rede, saida);
+        } else if (comando == "FOLLOW") {
+            int idSeguidor, idSeguido;
+            ss >> idSeguidor >> idSeguido;
+            seguirUsuario(rede, idSeguidor, idSeguido, saida);
+        } else if (comando == "LIST_FOLLOWING") {
+            int idUsuario;
+            ss >> idUsuario;
+            listarSeguindo(rede, idUsuario, saida);
+        } else if (comando == "ADD_POST") {
+            int idPost, idAutor, timestamp;
+            char texto[TAM_TEXTO];
+            ss >> idPost >> idAutor >> timestamp;
+            ss.get(); // Consumir o espaço antes do texto
+            ss.getline(texto, TAM_TEXTO); // Ler o texto do post
+            cadastrarPublicacao(rede, idPost, idAutor, timestamp, texto, saida);
+        } else if (comando == "LIKE") {
+            int idUsuario, idPost;
+            ss >> idUsuario >> idPost;
+            curtirPublicacao(rede, idUsuario, idPost, saida);
+        } else if (comando == "GET_NOTIFICATIONS") {
+            int idUsuario, k;
+            ss >> idUsuario >> k;
+            consultarNotificacoes(rede, idUsuario, k, saida);
+        } else if (comando == "FEED") {
+            int idUsuario, k;
+            ss >> idUsuario >> k;
+            gerarFeed(rede, idUsuario, k, saida);
+        } else if (comando == "TOP_POSTS") {
+            int k;
+            ss >> k;
+            listarTopPosts(rede, k, saida);
+        }
+    }
 }
 
 void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char nomeCompleto[], std::ostream& saida) {
