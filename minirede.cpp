@@ -116,15 +116,17 @@ void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char 
 
 
 void buscarUsuarioPorId(MiniRede& rede, int id, std::ostream& saida) {
-    NoUsuarioBST* usuario = UsuarioPorId(rede, id);
+    Usuario* usuario = UsuarioPorId(rede, id);  
     if (usuario != nullptr) {
-        saida << "USER " << usuario->user->id << " " 
-              << usuario->user->username << " " 
-              << usuario->user->nomeCompleto << "\n";
+        saida << "USER " << usuario->id << " " 
+              << usuario->username << " " 
+              << usuario->nomeCompleto << "\n";
         return;
     }
     saida << "ERROR USER_NOT_FOUND\n";
 }
+
+
 
 void buscarUsuarioPorUsername(MiniRede& rede, const char username[], std::ostream& saida) {
     Usuario* usuario = UsuarioPorUsername(rede, username);
