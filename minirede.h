@@ -47,8 +47,8 @@ struct Usuario {
     char username[TAM_USERNAME];
     char nomeCompleto[TAM_NOME];
     
-    IntNode* seguidos;        // Lista de IDs de usuários que ele segue
-    IntNode* postsCriados;    // Lista de IDs dos posts que ele criou
+    IntNode* seguidos;        // Lista de IDs de usuários que ele segue //seria o inicio da lista
+    IntNode* postsCriados;    // Lista de IDs dos posts que ele criou //seria o iniciio da lista
     FilaNotificacoes filaNotif;    // Fila de notificações
 };
 
