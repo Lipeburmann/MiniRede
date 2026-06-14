@@ -577,3 +577,24 @@ void liberarArvore(NoUsuarioBST* raiz) {
     // Por fim, deleta o nó da árvore
     delete raiz;
 }
+
+void liberarTabelaHash(NoUsuarioHash* hashUsernames[]) {
+    // Percorre cada uma das gavetas (índices) da tabela hash
+    for (int i = 0; i < TAM_HASH; i++) {
+        NoUsuarioHash* atual = hashUsernames[i];
+        
+        // Limpa a lista encadeada (colisões) daquela gaveta específica
+        while (atual != nullptr) {
+            NoUsuarioHash* temp = atual;
+            atual = atual->prox;
+            
+            // IMPORTANTE: Deleta apenas a caixinha do nó da Hash.
+            // NÃO damos 'delete temp->user' aqui para evitar o Duplo Delete, 
+            // já que a Árvore cuidará de apagar os usuários.
+            delete temp; 
+        }
+        
+        // Garante que a gaveta aponte para o vazio após ser limpa
+        hashUsernames[i] = nullptr;
+    }
+}

@@ -113,6 +113,7 @@ Publicacao* AcharPublicacaoPorId(MiniRede& rede, int idPost);
 // - inserir/listar/liberar arvore
 void liberarArvore(NoUsuarioBST* raiz);
 // - inserir/buscar/liberar tabela hash
+void liberarTabelaHash(NoUsuarioHash* hashUsernames[]);
 // - enfileirar/desenfileirar notificacoes
 void liberarFilaNotificacoes(Notificacao* inicio);
 // - manipular listas encadeadas
