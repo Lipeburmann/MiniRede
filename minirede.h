@@ -111,9 +111,12 @@ Usuario* UsuarioPorUsername(MiniRede& rede, const char username[]);
 // - buscar publicacao por id
 Publicacao* AcharPublicacaoPorId(MiniRede& rede, int idPost);
 // - inserir/listar/liberar arvore
+void liberarArvore(NoUsuarioBST* raiz);
 // - inserir/buscar/liberar tabela hash
 // - enfileirar/desenfileirar notificacoes
+void liberarFilaNotificacoes(Notificacao* inicio);
 // - manipular listas encadeadas
+void liberarListaIntNode(IntNode* inicio);
 // - ordenar vetores auxiliares para feed e ranking
 
 #endif

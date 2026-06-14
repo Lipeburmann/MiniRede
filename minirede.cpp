@@ -535,3 +535,45 @@ Publicacao* AcharPublicacaoPorId(MiniRede& rede, int idPost) {
 
     return post;
 }
+
+
+
+// Limpa qualquer lista encadeada feita de IntNode
+void liberarListaIntNode(IntNode* inicio) {
+    while (inicio != nullptr) {
+        IntNode* temp = inicio;
+        inicio = inicio->prox;
+        delete temp; // Deleta a caixinha do nó
+    }
+}
+
+// Limpa a fila de notificações
+void liberarFilaNotificacoes(Notificacao* inicio) {
+    while (inicio != nullptr) {
+        Notificacao* temp = inicio;
+        inicio = inicio->prox;
+        delete temp; // Deleta a caixinha da notificação
+    }
+}
+
+// Limpa a Árvore Binária (usando percurso Pós-Ordem: Esquerda, Direita, Raiz)
+void liberarArvore(NoUsuarioBST* raiz) {
+    if (raiz == nullptr) return;
+    
+    // Primeiro limpa os filhos
+    liberarArvore(raiz->esq);
+    liberarArvore(raiz->dir);
+    
+    // Depois limpa o usuário que está neste nó
+    if (raiz->user != nullptr) {
+        // Limpa as listas internas do usuário antes de deletá-ele
+        liberarListaIntNode(raiz->user->seguidos);
+        liberarListaIntNode(raiz->user->postsCriados);
+        liberarFilaNotificacoes(raiz->user->filaNotif.inicio);
+        
+        delete raiz->user; // FINALMENTE deleta o usuário da memória!
+    }
+    
+    // Por fim, deleta o nó da árvore
+    delete raiz;
+}
