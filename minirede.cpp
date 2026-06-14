@@ -229,7 +229,69 @@ void listarUsuarios(MiniRede& rede, std::ostream& saida) {
 }
 
 void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida) {
-    // TODO
+    // 1. Verifica se o usuário está tentando seguir a si mesmo [cite: 56]
+    if (idSeguidor == idSeguido) {
+        saida << "ERROR CANNOT_FOLLOW_SELF\n";
+        return;
+    }
+
+    // 2. Busca os dois usuários usando a sua função auxiliar
+    Usuario* seguidor = UsuarioPorId(rede, idSeguidor);
+    Usuario* seguido = UsuarioPorId(rede, idSeguido);
+
+    // Se algum deles não for encontrado [cite: 55]
+    if (seguidor == nullptr || seguido == nullptr) {
+        saida << "ERROR USER_NOT_FOUND\n";
+        return;
+    }
+
+    // 3. Procura a posição correta para inserir na lista ordenada do seguidor
+    IntNode* atual = seguidor->seguidos;
+    IntNode* anterior = nullptr;
+
+    // Caminha pela lista enquanto o ID atual for MENOR que o ID que queremos inserir
+    while (atual != nullptr && atual->id < idSeguido) {
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    // 4. Verifica se já segue (parou em um nó com o mesmo ID exato) [cite: 57]
+    if (atual != nullptr && atual->id == idSeguido) {
+        saida << "ERROR ALREADY_FOLLOWING\n";
+        return;
+    }
+
+    // 5. Cria o novo nó de ID e insere na posição correta (mantendo a ordem crescente)
+    IntNode* novoSeguido = new IntNode;
+    novoSeguido->id = idSeguido;
+    novoSeguido->prox = atual;
+
+    if (anterior == nullptr) {
+        // Insere no início (a lista estava vazia ou o ID é o menor de todos)
+        seguidor->seguidos = novoSeguido;
+    } else {
+        // Insere no meio ou no fim
+        anterior->prox = novoSeguido;
+    }
+
+    // 6. Adiciona a notificação na fila do usuário SEGUIDO 
+    Notificacao* novaNotif = new Notificacao;
+    novaNotif->tipo = NOTIF_FOLLOW;
+    novaNotif->idOrigem = idSeguidor;
+    novaNotif->idPost = 0; // Não é usado para FOLLOW, mas é bom zerar
+    novaNotif->prox = nullptr;
+
+    // Lógica de Fila (FIFO)
+    if (seguido->filaNotif.inicio == nullptr) {
+        seguido->filaNotif.inicio = novaNotif;
+        seguido->filaNotif.fim = novaNotif;
+    } else {
+        seguido->filaNotif.fim->prox = novaNotif;
+        seguido->filaNotif.fim = novaNotif;
+    }
+
+    // 7. Imprime sucesso [cite: 54]
+    saida << "FOLLOWED\n";
 }
 
 void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
