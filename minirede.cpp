@@ -21,7 +21,22 @@ int calcularHash(const char username[]) {
 }
 
 void liberarMiniRede(MiniRede& rede) {
-    // TODO
+    // 1. Limpar a lista global de publicações
+    Publicacao* postAtual = rede.listaPublicacoes;
+    while (postAtual != nullptr) {
+        Publicacao* temp = postAtual;
+        postAtual = postAtual->prox;
+        liberarListaIntNode(temp->listaCurtidas);
+        delete temp;
+    }
+    rede.listaPublicacoes = nullptr;
+
+    // 2. Chamar a sua nova função de limpar a Hash
+    liberarTabelaHash(rede.hashUsernames);
+
+    // 3. Limpar a Árvore Binária (que finalmente deleta os usuários)
+    liberarArvore(rede.raizUsuarios);
+    rede.raizUsuarios = nullptr;
 }
 
 void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& saida) {
@@ -587,10 +602,6 @@ void liberarTabelaHash(NoUsuarioHash* hashUsernames[]) {
         while (atual != nullptr) {
             NoUsuarioHash* temp = atual;
             atual = atual->prox;
-            
-            // IMPORTANTE: Deleta apenas a caixinha do nó da Hash.
-            // NÃO damos 'delete temp->user' aqui para evitar o Duplo Delete, 
-            // já que a Árvore cuidará de apagar os usuários.
             delete temp; 
         }
         

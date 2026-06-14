@@ -58,7 +58,7 @@ struct Publicacao {
     int timestamp;
     char texto[TAM_TEXTO];
     int curtidas;
-    IntNode* listaCurtidas; // Lista de IDs de quem curtiu (para evitar curtida dupla)
+    IntNode* listaCurtidas; // Lista de IDs de quem curtiu (para evitar curtida dupla) //marca o inicio das curtidas
     Publicacao* prox;       // Caso decida guardar as publicações em uma lista global
 };
 
