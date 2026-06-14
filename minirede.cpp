@@ -12,7 +12,7 @@ void inicializarMiniRede(MiniRede& rede) {
 }
 
 int calcularHash(const char username[]) {
-//Ela vai pegar o texto do username, somar os valores das letras e dividir pelo tamanho do vetor (101), pegando o resto da divisão
+//Ela vai pegar o texto do username, somar os valores das letras e dividir pelo tamanho do vetor , pegando o resto da divisão
     int hash = 0;
     for (int i = 0; username[i] != '\0'; i++) {
         hash = (hash + username[i]) % TAM_HASH;
@@ -220,12 +220,12 @@ void imprimirArvoreInOrdem(NoUsuarioBST* no, std::ostream& saida) {
 }
 
 void listarUsuarios(MiniRede& rede, std::ostream& saida) {
-    saida << "USERS_BEGIN\n"; // [cite: 48]
+    saida << "USERS_BEGIN\n"; // 
     
     // Chama a função recursiva passando a raiz da árvore
     imprimirArvoreInOrdem(rede.raizUsuarios, saida);
     
-    saida << "USERS_END\n"; // [cite: 49]
+    saida << "USERS_END\n"; // 
 }
 
 void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida) {
@@ -240,7 +240,7 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
         return;
     }
 
-    saida << "FOLLOWING_BEGIN\n";
+    saida << "FOLLOWING BEGIN\n";
 
     IntNode* atual = usuario->seguidos;
     
