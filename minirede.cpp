@@ -254,7 +254,7 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
     Usuario* seguidor = UsuarioPorId(rede, idSeguidor);
     Usuario* seguido = UsuarioPorId(rede, idSeguido);
 
-    // Se algum deles não for encontrado 
+    // Se algum deles não for encontrado [cite: 55]
     if (seguidor == nullptr || seguido == nullptr) {
         saida << "ERROR USER_NOT_FOUND\n";
         return;
