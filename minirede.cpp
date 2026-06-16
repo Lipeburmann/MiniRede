@@ -244,7 +244,7 @@ void listarUsuarios(MiniRede& rede, std::ostream& saida) {
 }
 
 void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida) {
-    // 1. Verifica se o usuário está tentando seguir a si mesmo [cite: 56]
+    // 1. Verifica se o usuário está tentando seguir a si mesmo 
     if (idSeguidor == idSeguido) {
         saida << "ERROR CANNOT_FOLLOW_SELF\n";
         return;
@@ -254,7 +254,7 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
     Usuario* seguidor = UsuarioPorId(rede, idSeguidor);
     Usuario* seguido = UsuarioPorId(rede, idSeguido);
 
-    // Se algum deles não for encontrado [cite: 55]
+    // Se algum deles não for encontrado 
     if (seguidor == nullptr || seguido == nullptr) {
         saida << "ERROR USER_NOT_FOUND\n";
         return;
@@ -270,7 +270,7 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
         atual = atual->prox;
     }
 
-    // 4. Verifica se já segue (parou em um nó com o mesmo ID exato) [cite: 57]
+    // 4. Verifica se já segue (parou em um nó com o mesmo ID exato) 
     if (atual != nullptr && atual->id == idSeguido) {
         saida << "ERROR ALREADY_FOLLOWING\n";
         return;
@@ -305,9 +305,65 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
         seguido->filaNotif.fim = novaNotif;
     }
 
-    // 7. Imprime sucesso [cite: 54]
+    // 7. Imprime sucesso 
     saida << "FOLLOWED\n";
 }
+
+void unfollowUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida) {
+    // 1. Verifica se está tentando dar unfollow em si mesmo
+    if (idSeguidor == idSeguido) {
+        saida << "ERROR CANNOT_UNFOLLOW_SELF\n"; 
+        return;
+    }
+
+    // 2. Busca os usuários para garantir que ambos existem
+    Usuario* seguidor = UsuarioPorId(rede, idSeguidor);
+    Usuario* seguido = UsuarioPorId(rede, idSeguido);
+
+    if (seguidor == nullptr || seguido == nullptr) {
+        saida << "ERROR USER_NOT_FOUND\n";
+        return;
+    }
+
+    // 3. Prepara os ponteiros para percorrer a lista
+    IntNode* atual = seguidor->seguidos;
+    IntNode* anterior = nullptr;
+
+    // Caminha pela lista procurando o ID exato.
+    // Como a lista está em ordem crescente, podemos parar se acharmos um ID maior.
+    while (atual != nullptr && atual->id < idSeguido) {
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    // 4. Verifica se o usuário realmente seguia a pessoa
+    // Se a lista acabou (atual == nullptr) ou parou num ID diferente, ele não seguia!
+    if (atual == nullptr || atual->id != idSeguido) {
+        saida << "ERROR NOT_FOLLOWING\n";
+        return;
+    }
+
+    // ==========================================
+    // 5. A MÁGICA DA REMOÇÃO (Descosturando o nó)
+    // ==========================================
+    
+    if (anterior == nullptr) {
+        // Cenário A: O cara que queremos remover é o PRIMEIRO da fila
+        // O início da lista passa a ser o segundo cara (atual->prox)
+        seguidor->seguidos = atual->prox;
+    } else {
+        // Cenário B: O cara está no MEIO ou no FIM da fila
+        // A sombra solta a mão do atual e dá as mãos para quem vem depois do atual
+        anterior->prox = atual->prox;
+    }
+
+    // 6. Destrói o nó que foi isolado da lista
+    delete atual;
+
+    // 7. Imprime sucesso
+    saida << "UNFOLLOWED\n";
+}
+
 
 void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
     Usuario* usuario = UsuarioPorId(rede, idUsuario);
