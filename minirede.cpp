@@ -781,7 +781,6 @@ void liberarTabelaHash(NoUsuarioHash* hashUsernames[]) {
         // Limpa a lista encadeada (colisões) daquela gaveta específica
         while (atual != nullptr) {
             NoUsuarioHash* temp = atual;
-            delete atual->user; // Deleta o usuário associado a este nó da hash
             atual = atual->prox;
             delete temp; 
         }
