@@ -30,18 +30,13 @@ void liberarMiniRede(MiniRede& rede) {
         delete temp;
     }
     rede.listaPublicacoes = nullptr;
-    printf("Lista de publicações liberada com sucesso!\n");
 
     // 3. Limpar a Árvore Binária (que finalmente deleta os usuários)
     liberarArvore(rede.raizUsuarios);
-    printf("Árvore Binária liberada com sucesso!\n");
     rede.raizUsuarios = nullptr;
 
     // 2. Chamar a sua nova função de limpar a Hash
-    liberarTabelaHash(rede.hashUsernames);
-    printf("Tabela Hash liberada com sucesso!\n");
-
-    
+    liberarTabelaHash(rede.hashUsernames); 
 }
 
 void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& saida) {
@@ -543,28 +538,15 @@ void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
         return;
     }
 
-    NoPublicacao* postsEncontrados = CriarFeed(rede, usuario); //pega todos os posts dos usuários que ele segue e coloca numa lista encadeada de NoPublicacao
+    NoPublicacao* postsEncontrados = ListarPostsSeguindo(rede, usuario); //pega todos os posts dos usuários que ele segue e coloca numa lista encadeada de NoPublicacao
 
-    // Ordenar os posts encontrados por timestamp decrescente com Bubble Sort
-    bool trocou;
-    do {
-        trocou = false;
-        NoPublicacao* ptr = postsEncontrados;
-        while (ptr != nullptr && ptr->prox != nullptr) {
-            if (ptr->post->timestamp < ptr->prox->post->timestamp) {
-                // Troca os posts
-                Publicacao* tempPost = ptr->post;
-                ptr->post = ptr->prox->post;
-                ptr->prox->post = tempPost;
-                trocou = true;
-            }
-            ptr = ptr->prox;
-        }
-    } while (trocou);
+    postsEncontrados = SelecionarKPostsMaisRecentes(postsEncontrados, k); //seleciona os 'k' posts mais recentes da lista encadeada de NoPublicacao (que tem os posts dos usuários que ele segue)
+    
+    postsEncontrados = OrdenarPostsPorTimestamp(postsEncontrados); //ordena os posts por timestamp decrescente (mais recentes primeiro)
 
     // Imprimir os posts do feed
     saida << "FEED_BEGIN\n";
-    imprimirXPosts(postsEncontrados, k, saida); //imprime os 'k' primeiros posts da lista encadeada de NoPublicacao (que já está ordenada por timestamp)
+    imprimirXPosts(postsEncontrados, k, saida); 
     saida << "FEED_END\n";
 
     liberarListaPublicacao(postsEncontrados);
@@ -577,52 +559,10 @@ void listarTopPosts(MiniRede& rede, int k, std::ostream& saida) {
     }
 
     //achar as 'k' publicações com mais curtidas na lista global de publicações da rede
-    Publicacao* atual = rede.listaPublicacoes;
-    NoPublicacao* k_mais_curtidas = nullptr;
-    int contador = 0;
-    //primeiro pegar as k primeiras
-    while (atual != nullptr && contador < k) {
-        NoPublicacao* novo_no = new NoPublicacao;
-        novo_no->post = atual;
-        novo_no->prox = k_mais_curtidas;
-        k_mais_curtidas = novo_no;
-        atual = atual->prox_global;
-        contador++;
-    }
 
-    while (atual != nullptr) {
-        //achar o post com menos curtidas na lista de k mais curtidas
-        NoPublicacao* menos_curtido = k_mais_curtidas;
-        NoPublicacao* ptr = k_mais_curtidas;
-        while (ptr != nullptr) {
-            if (ptr->post->curtidas < menos_curtido->post->curtidas) {
-                menos_curtido = ptr;
-            }
-            ptr = ptr->prox;
-        }
-        //se o post atual tiver mais curtidas que o menos curtido, substitui
-        if (atual->curtidas > menos_curtido->post->curtidas) {
-            menos_curtido->post = atual;
-        }
-        atual = atual->prox_global;
-    }
+    NoPublicacao* k_mais_curtidas = SelecionarKPostsMaisCurtidos(rede.listaPublicacoes, k); //seleciona os 'k' posts mais curtidos da lista global de publicações da rede
 
-    // Ordenar os k mais curtidos por curtidas decrescente com Bubble Sort
-    bool trocou;
-    do {
-        trocou = false; 
-        NoPublicacao* ptr = k_mais_curtidas;
-        while (ptr != nullptr && ptr->prox != nullptr) {
-            if (ptr->post->curtidas < ptr->prox->post->curtidas) {
-                // Troca os posts
-                Publicacao* tempPost = ptr->post;
-                ptr->post = ptr->prox->post;
-                ptr->prox->post = tempPost;
-                trocou = true;
-            }
-            ptr = ptr->prox;
-        }
-    } while (trocou);
+    k_mais_curtidas = OrdenarPostsPorCurtidas(k_mais_curtidas); // Ordenar os k mais curtidos por curtidas decrescente com Bubble Sort
 
     // Imprimir os k mais curtidos
     saida << "TOP_POSTS_BEGIN\n";
@@ -642,7 +582,9 @@ int main() {
     return 0;
 }
 
-// auxiliares
+// --------------- auxiliares ---------------------
+
+// ***Feed e ranking
 
 void imprimirXPosts(NoPublicacao* post, int x, std::ostream& saida) {
     int contador = 0;
@@ -658,7 +600,7 @@ void imprimirXPosts(NoPublicacao* post, int x, std::ostream& saida) {
     }
 }
 
-NoPublicacao* CriarFeed(MiniRede& rede, Usuario* usuario) { //cria uma lista encadeada de NoPublicacao com os posts dos usuários que ele segue
+NoPublicacao* ListarPostsSeguindo(MiniRede& rede, Usuario* usuario) { //cria uma lista encadeada de NoPublicacao com os posts dos usuários que ele segue
     NoPublicacao* postsEncontrados = nullptr;
     IntNode* seguindo_atual = usuario->seguidos;
     while (seguindo_atual != nullptr) {
@@ -679,14 +621,125 @@ NoPublicacao* CriarFeed(MiniRede& rede, Usuario* usuario) { //cria uma lista enc
     return postsEncontrados;
 }
 
+NoPublicacao* SelecionarKPostsMaisRecentes(NoPublicacao* posts, int k) { //seleciona os 'k' posts mais recentes da lista encadeada de NoPublicacao (que tem os posts dos usuários que ele segue)
+    NoPublicacao* k_mais_recentes = nullptr;
+    int contador = 0;
+    NoPublicacao* atual = posts;
+    while (atual != nullptr && contador < k) { // Pega os 'k' primeiros posts da lista para começar a comparação
+        NoPublicacao* novo_no = new NoPublicacao;
+        novo_no->post = atual->post;
+        novo_no->prox = k_mais_recentes;
+        k_mais_recentes = novo_no;
+        atual = atual->prox;
+        contador++;
+    }
+    
+    while (atual != nullptr) {
+        // Acha o post com o menor timestamp na lista de 'k' mais recentes
+        NoPublicacao* menos_recente = k_mais_recentes;
+        NoPublicacao* ptr = k_mais_recentes;
+        while (ptr != nullptr) {
+            if (ptr->post->timestamp < menos_recente->post->timestamp) {
+                menos_recente = ptr;
+            }
+            ptr = ptr->prox;
+        }
+        // Se o post atual for mais recente que o menos recente, substitui
+        if (atual->post->timestamp > menos_recente->post->timestamp) {
+            menos_recente->post = atual->post;
+        }
+        atual = atual->prox;
+    }
+
+    return k_mais_recentes;
+}
+
+NoPublicacao* OrdenarPostsPorTimestamp(NoPublicacao* posts) { //ordena os posts por timestamp decrescente (mais recentes primeiro) usando Bubble Sort
+    if (posts == nullptr) return nullptr;
+
+    bool trocou;
+    do {
+        trocou = false;
+        NoPublicacao* ptr = posts;
+        while (ptr != nullptr && ptr->prox != nullptr) {
+            if (ptr->post->timestamp < ptr->prox->post->timestamp) {
+                // Troca os posts
+                Publicacao* tempPost = ptr->post;
+                ptr->post = ptr->prox->post;
+                ptr->prox->post = tempPost;
+                trocou = true;
+            }
+            ptr = ptr->prox;
+        }
+    } while (trocou);
+
+    return posts; // Retorna a cabeça da lista, que agora está ordenada
+}
+
+NoPublicacao* SelecionarKPostsMaisCurtidos(Publicacao* posts, int k) { //seleciona os 'k' posts mais curtidos da lista global de publicações da rede
+    NoPublicacao* k_mais_curtidos = nullptr;
+    int contador = 0;
+    Publicacao* atual = posts;
+    while (atual != nullptr && contador < k) { // Pega os 'k' primeiros posts da lista para começar a comparação
+        NoPublicacao* novo_no = new NoPublicacao;
+        novo_no->post = atual;
+        novo_no->prox = k_mais_curtidos;
+        k_mais_curtidos = novo_no;
+        atual = atual->prox_global;
+        contador++;
+    }
+    
+    while (atual != nullptr) {
+        // Acha o post com o menor número de curtidas na lista de 'k' mais curtidos
+        NoPublicacao* menos_curtido = k_mais_curtidos;
+        NoPublicacao* ptr = k_mais_curtidos;
+        while (ptr != nullptr) {
+            if (ptr->post->curtidas < menos_curtido->post->curtidas) {
+                menos_curtido = ptr;
+            }
+            ptr = ptr->prox;
+        }
+        // Se o post atual tiver mais curtidas que o menos curtido, substitui
+        if (atual->curtidas > menos_curtido->post->curtidas) {
+            menos_curtido->post = atual;
+        }
+        atual = atual->prox_global;
+    }
+
+    return k_mais_curtidos;
+}
+
+NoPublicacao* OrdenarPostsPorCurtidas(NoPublicacao* posts) { // Ordena os posts por curtidas decrescente usando Bubble Sort
+    if (posts == nullptr) return nullptr;
+
+    bool trocou;
+    do {
+        trocou = false;
+        NoPublicacao* ptr = posts;
+        while (ptr != nullptr && ptr->prox != nullptr) {
+            if (ptr->post->curtidas < ptr->prox->post->curtidas) {
+                // Troca os posts
+                Publicacao* tempPost = ptr->post;
+                ptr->post = ptr->prox->post;
+                ptr->prox->post = tempPost;
+                trocou = true;
+            }
+            ptr = ptr->prox;
+        }
+    } while (trocou);
+
+    return posts; // Retorna a cabeça da lista, que agora está ordenada
+}
+
 void liberarListaPublicacao(NoPublicacao* inicio) {
     while (inicio != nullptr) {
         NoPublicacao* temp = inicio;
         inicio = inicio->prox;
         delete temp;
     }
-    printf("Lista de publicações liberada com sucesso!\n");
 }
+
+//***Busca
 
 Usuario* UsuarioPorId(MiniRede& rede, int id) {
     NoUsuarioBST* atual = rede.raizUsuarios;
@@ -732,7 +785,7 @@ Publicacao* AcharPublicacaoPorId(MiniRede& rede, int idPost) {
     return post;
 }
 
-
+//***Liberar memória
 
 // Limpa qualquer lista encadeada feita de IntNode
 void liberarListaIntNode(IntNode* inicio) {
@@ -787,7 +840,6 @@ void liberarTabelaHash(NoUsuarioHash* hashUsernames[]) {
         
         // Garante que a gaveta aponte para o vazio após ser limpa
         hashUsernames[i] = nullptr;
-        printf("Gaveta %d da Tabela Hash liberada com sucesso!\n", i);
     }
 }
 
@@ -798,5 +850,4 @@ void liberarPublicacoes(Publicacao* inicio) {
         liberarListaIntNode(temp->listaCurtidas); // Limpa a lista de curtidas do post
         delete temp; // Deleta o post
     }
-    printf("Publicações liberadas com sucesso!\n");
 }

@@ -53,7 +53,7 @@ struct Usuario {
     FilaNotificacoes filaNotif;    // Fila de notificações
 };
 
-struct NoPublicacao{
+struct NoPublicacao{ // Estrutura para lista encadeada temporária de publicações (usada para feed e ranking)
     Publicacao* post;
     NoPublicacao* prox;
 };
@@ -131,7 +131,15 @@ void imprimirArvoreInOrdem(NoUsuarioBST* raiz, std::ostream& saida);
 void imprimirXPosts(NoPublicacao* lista, int k, std::ostream& saida);
 void liberarListaPublicacao(NoPublicacao* inicio);
 void liberarPublicacoes(Publicacao* inicio);
-NoPublicacao* CriarFeed(MiniRede& rede, Usuario* usuario);
+
+//auxiliares para gerar feed
+NoPublicacao* SelecionarKPostsMaisRecentes(NoPublicacao* posts, int k);
+NoPublicacao* OrdenarPostsPorTimestamp(NoPublicacao* posts); //ordena
+NoPublicacao* ListarPostsSeguindo(MiniRede& rede, Usuario* usuario);
+
+//auxiliares para listar top posts
+NoPublicacao* SelecionarKPostsMaisCurtidos(Publicacao* posts, int k);
+NoPublicacao* OrdenarPostsPorCurtidas(NoPublicacao* posts); //ordena
 
 
 #endif
