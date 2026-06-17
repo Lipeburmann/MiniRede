@@ -41,15 +41,21 @@ struct FilaNotificacoes {
 };
 
 /////////////////////////////////////////////////////
+struct Publicacao; // Forward declaration
 
 struct Usuario {
     int id;
     char username[TAM_USERNAME];
     char nomeCompleto[TAM_NOME];
     
-    IntNode* seguidos;        // Lista de IDs de usuários que ele segue //seria o inicio da lista
-    IntNode* postsCriados;    // Lista de IDs dos posts que ele criou //seria o iniciio da lista
+    IntNode* seguidos;        // Lista de IDs de usuários que ele segue
+    Publicacao* postsCriados;    // Lista de posts que ele criou
     FilaNotificacoes filaNotif;    // Fila de notificações
+};
+
+struct NoPublicacao{
+    Publicacao* post;
+    NoPublicacao* prox;
 };
 
 struct Publicacao {
@@ -58,8 +64,9 @@ struct Publicacao {
     int timestamp;
     char texto[TAM_TEXTO];
     int curtidas;
-    IntNode* listaCurtidas; // Lista de IDs de quem curtiu (para evitar curtida dupla) //marca o inicio das curtidas
-    Publicacao* prox;       // Caso decida guardar as publicações em uma lista global
+    IntNode* listaCurtidas; // Lista de IDs de quem curtiu (para evitar curtida dupla)
+    Publicacao* prox_global;       // Caso decida guardar as publicações em uma lista global
+    Publicacao* prox_autor;              // Caso decida guardar as publicações em uma lista do autor
 };
 
 // - nos para arvore binaria de usuarios por id
@@ -119,5 +126,12 @@ void liberarFilaNotificacoes(Notificacao* inicio);
 // - manipular listas encadeadas
 void liberarListaIntNode(IntNode* inicio);
 // - ordenar vetores auxiliares para feed e ranking
+// - imprimir saida formatada de usuários, posts, feeds, etc
+void imprimirArvoreInOrdem(NoUsuarioBST* raiz, std::ostream& saida);
+void imprimirXPosts(NoPublicacao* lista, int k, std::ostream& saida);
+void liberarListaPublicacao(NoPublicacao* inicio);
+void liberarPublicacoes(Publicacao* inicio);
+NoPublicacao* CriarFeed(MiniRede& rede, Usuario* usuario);
+
 
 #endif
