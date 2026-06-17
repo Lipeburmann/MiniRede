@@ -6,7 +6,7 @@ void inicializarMiniRede(MiniRede& rede) {
     rede.raizUsuarios = nullptr;
     
     // Garante que todas as gavetas da Tabela Hash comecem vazias
-    for (int i = 0; i < 101; i++) {
+    for (int i = 0; i < TAM_HASH; i++) {
         rede.hashUsernames[i] = nullptr;
     }
 }
