@@ -104,6 +104,10 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
             int k;
             ss >> k;
             listarTopPosts(rede, k, saida);
+        } else if (comando == "UNFOLLOW") {
+            int idSeguidor, idSeguido;
+            ss >> idSeguidor >> idSeguido;
+            unfollowUsuario(rede, idSeguidor, idSeguido, saida);
         } else {
             saida << "ERROR INVALID_COMMAND\n";
         }
