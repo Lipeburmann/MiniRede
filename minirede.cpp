@@ -642,13 +642,13 @@ NoPublicacao* SelecionarKPostsMaisRecentes(NoPublicacao* posts, int k) { //selec
         NoPublicacao* menos_recente = k_mais_recentes;
         NoPublicacao* ptr = k_mais_recentes;
         while (ptr != nullptr) {
-            if (ptr->post->timestamp < menos_recente->post->timestamp) {
+            if (ptr->post->timestamp < menos_recente->post->timestamp || (ptr->post->timestamp == menos_recente->post->timestamp && ptr->post->id > menos_recente->post->id)) {
                 menos_recente = ptr;
             }
             ptr = ptr->prox;
         }
         // Se o post atual for mais recente que o menos recente, substitui
-        if (atual->post->timestamp > menos_recente->post->timestamp) {
+        if (atual->post->timestamp > menos_recente->post->timestamp || (atual->post->timestamp == menos_recente->post->timestamp && atual->post->id < menos_recente->post->id)) {
             menos_recente->post = atual->post;
         }
         atual = atual->prox;
@@ -665,7 +665,8 @@ NoPublicacao* OrdenarPostsPorTimestamp(NoPublicacao* posts) { //ordena os posts 
         trocou = false;
         NoPublicacao* ptr = posts;
         while (ptr != nullptr && ptr->prox != nullptr) {
-            if (ptr->post->timestamp < ptr->prox->post->timestamp) {
+            if (ptr->post->timestamp < ptr->prox->post->timestamp ||
+            (ptr->post->timestamp == ptr->prox->post->timestamp && ptr->post->id > ptr->prox->post->id)) {
                 // Troca os posts
                 Publicacao* tempPost = ptr->post;
                 ptr->post = ptr->prox->post;
@@ -697,13 +698,14 @@ NoPublicacao* SelecionarKPostsMaisCurtidos(Publicacao* posts, int k) { //selecio
         NoPublicacao* menos_curtido = k_mais_curtidos;
         NoPublicacao* ptr = k_mais_curtidos;
         while (ptr != nullptr) {
-            if (ptr->post->curtidas < menos_curtido->post->curtidas) {
+            if (ptr->post->curtidas < menos_curtido->post->curtidas || (ptr->post->curtidas == menos_curtido->post->curtidas && ptr->post->id > menos_curtido->post->id)) {
                 menos_curtido = ptr;
             }
             ptr = ptr->prox;
         }
         // Se o post atual tiver mais curtidas que o menos curtido, substitui
-        if (atual->curtidas > menos_curtido->post->curtidas) {
+        if (atual->curtidas > menos_curtido->post->curtidas || 
+        (atual->curtidas == menos_curtido->post->curtidas && atual->id < menos_curtido->post->id)) {
             menos_curtido->post = atual;
         }
         atual = atual->prox_global;
@@ -720,7 +722,7 @@ NoPublicacao* OrdenarPostsPorCurtidas(NoPublicacao* posts) { // Ordena os posts 
         trocou = false;
         NoPublicacao* ptr = posts;
         while (ptr != nullptr && ptr->prox != nullptr) {
-            if (ptr->post->curtidas < ptr->prox->post->curtidas) {
+            if (ptr->post->curtidas < ptr->prox->post->curtidas || (ptr->post->curtidas == ptr->prox->post->curtidas && ptr->post->id > ptr->prox->post->id)) {
                 // Troca os posts
                 Publicacao* tempPost = ptr->post;
                 ptr->post = ptr->prox->post;
