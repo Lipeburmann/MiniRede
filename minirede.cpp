@@ -4,6 +4,7 @@
 void inicializarMiniRede(MiniRede& rede) {
     // Garante que a árvore comece vazia
     rede.raizUsuarios = nullptr;
+    rede.listaPublicacoes = nullptr;
     
     // Garante que todas as gavetas da Tabela Hash comecem vazias
     for (int i = 0; i < TAM_HASH; i++) {
@@ -103,6 +104,8 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
             int k;
             ss >> k;
             listarTopPosts(rede, k, saida);
+        } else {
+            saida << "ERROR INVALID_COMMAND\n";
         }
     }
 }
@@ -363,7 +366,7 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
         return;
     }
 
-    saida << "FOLLOWING BEGIN\n";
+    saida << "FOLLOWING_BEGIN\n";
 
     IntNode* atual = usuario->seguidos;
     
@@ -506,10 +509,10 @@ void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& s
         
         // 4. Verifica o tipo da notificação para imprimir no formato correto
         if (noRemovido->tipo == NOTIF_FOLLOW) {
-            saida << "FOLLOW " << noRemovido->idOrigem << "\n";
+            saida << "NOTIFICATION FOLLOW " << noRemovido->idOrigem << "\n";
         } 
         else if (noRemovido->tipo == NOTIF_LIKE) {
-            saida << "LIKE " << noRemovido->idOrigem << " " << noRemovido->idPost << "\n";
+            saida << "NOTIFICATION LIKE " << noRemovido->idOrigem << " " << noRemovido->idPost << "\n";
         }
 
         // Avança o início da fila para o próximo nó
