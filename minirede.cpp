@@ -541,12 +541,14 @@ void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
         return;
     }
 
-    NoPublicacao* postsEncontrados = ListarPostsSeguindo(rede, usuario); //pega todos os posts dos usuários que ele segue e coloca numa lista encadeada de NoPublicacao
+    NoPublicacao* todosPosts = ListarPostsSeguindo(rede, usuario); //pega todos os posts dos usuários que ele segue e coloca numa lista encadeada de NoPublicacao
 
-    postsEncontrados = SelecionarKPostsMaisRecentes(postsEncontrados, k); //seleciona os 'k' posts mais recentes da lista encadeada de NoPublicacao (que tem os posts dos usuários que ele segue)
+    NoPublicacao* postsEncontrados = SelecionarKPostsMaisRecentes(todosPosts, k); //seleciona os 'k' posts mais recentes da lista encadeada de NoPublicacao (que tem os posts dos usuários que ele segue)
     
-    postsEncontrados = OrdenarPostsPorTimestamp(postsEncontrados); //ordena os posts por timestamp decrescente (mais recentes primeiro)
+    liberarListaPublicacao(todosPosts); //libera a lista encadeada de NoPublicacao que tinha todos os posts dos usuários que ele segue, pois não precisamos mais dela
 
+    postsEncontrados = OrdenarPostsPorTimestamp(postsEncontrados); //ordena os posts por timestamp decrescente (mais recentes primeiro)
+    
     // Imprimir os posts do feed
     saida << "FEED_BEGIN\n";
     imprimirXPosts(postsEncontrados, k, saida); 
