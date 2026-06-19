@@ -60,6 +60,10 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
             char username[TAM_USERNAME];
             char nomeCompleto[TAM_NOME];
             ss >> id >> username;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             ss.get(); // consome o espaço antes do nome completo
             ss.getline(nomeCompleto, TAM_NOME);
             cadastrarUsuario(rede, id, username, nomeCompleto, saida);
@@ -101,6 +105,10 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
             int idPost, idAutor, timestamp;
             char texto[TAM_TEXTO];
             ss >> idPost >> idAutor >> timestamp;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             ss.get(); // Consumir o espaço antes do texto
             ss.getline(texto, TAM_TEXTO); // Ler o texto do post
             cadastrarPublicacao(rede, idPost, idAutor, timestamp, texto, saida);
@@ -131,6 +139,10 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
         } else if (comando == "TOP_POSTS") {
             int k;
             ss >> k;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             listarTopPosts(rede, k, saida);
         } else if (comando == "UNFOLLOW") {
             int idSeguidor, idSeguido;
@@ -152,9 +164,21 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
             int idUsuario, idPost, idComentario;
             char texto[TAM_TEXTO];
             ss >> idUsuario >> idPost >> idComentario;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             ss.get(); // Consumir o espaço antes do texto
             ss.getline(texto, TAM_TEXTO); // Ler o texto do comentário
             comentar(rede, idUsuario, idPost, idComentario, texto, saida);
+        } else if (comando == "SEE_COMMENTS") {
+            int idPost;
+            ss >> idPost;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
+            listarComentarios(rede, idPost, saida);
         }
         else {
             saida << "ERROR INVALID_COMMAND\n";
@@ -436,7 +460,7 @@ void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp,
     }
 
     // 2. Verificar se o ID do post já existe na rede 
-    NoPublicacao* postExistente = AcharPublicacaoEanteriorPorId(rede, idPost);
+    Publicacao* postExistente = PublicacaoPorId(rede, idPost);
     if (postExistente != nullptr) {
         saida << "ERROR POST_EXISTS\n"; // 
         return;
@@ -472,9 +496,8 @@ void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& s
     }
 
     // 2. Achar post
-    NoPublicacao* busca = AcharPublicacaoEanteriorPorId(rede, idPost);
-    Publicacao* post = busca->post;
-    if (busca == nullptr) {
+    Publicacao* post = PublicacaoPorId(rede, idPost);
+    if (post == nullptr) {
         saida << "ERROR POST_NOT_FOUND\n"; // [cite: 81]
         return;
     }
@@ -536,6 +559,9 @@ void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& s
         } 
         else if (noRemovido->tipo == NOTIF_LIKE) {
             saida << "NOTIFICATION LIKE " << noRemovido->idOrigem << " " << noRemovido->idPost << "\n";
+        }
+        else if (noRemovido->tipo == NOTIF_COMMENT) {
+            saida << "NOTIFICATION COMMENT " << noRemovido->idOrigem << " " << noRemovido->idPost << "\n";
         }
 
         // Avança o início da fila para o próximo nó
@@ -602,13 +628,19 @@ void listarTopPosts(MiniRede& rede, int k, std::ostream& saida) {
 
 void removerPost(MiniRede& rede, int idPost, std::ostream& saida) {
     NoPublicacao* resultadoBusca = AcharPublicacaoEanteriorPorId(rede, idPost);
-    Publicacao* postAtual = resultadoBusca->post;
-    Publicacao* postAnterior = resultadoBusca->prox->post;
-
-    if (postAtual == nullptr) {
+    if (resultadoBusca == nullptr) {
         saida << "ERROR POST_NOT_FOUND\n";
         return; // Post não encontrado, nada a remover
     }
+    Publicacao* postAtual = resultadoBusca->post;
+    Publicacao* postAnterior;
+
+    if (resultadoBusca->prox == nullptr) {
+        postAnterior = nullptr; // O post a remover é o primeiro da lista
+    } else {
+        postAnterior = resultadoBusca->prox->post;
+    }
+    liberarListaPublicacao(resultadoBusca);
 
     // 2. Remover da lista global
     if (postAnterior == nullptr) {
@@ -653,6 +685,8 @@ void comentar(MiniRede& rede, int idUsuario, int idPost, int idComentario, const
         saida << "ERROR POST_NOT_FOUND\n";
         return;
     }
+    Publicacao* post = busca->post;
+    liberarListaPublicacao(busca);
 
     Usuario* usuario = UsuarioPorId(rede, idUsuario);
     if (usuario == nullptr) {
@@ -660,17 +694,36 @@ void comentar(MiniRede& rede, int idUsuario, int idPost, int idComentario, const
         return;
     }
 
-    Publicacao* post = busca->post;
-
     Comentario* novoComentario = new Comentario;
     novoComentario->idAutor = idUsuario;
     strcpy(novoComentario->texto, texto);
     novoComentario->id = idComentario;
     novoComentario->prox = post->listaComentarios;
     post->listaComentarios = novoComentario;
+
+    saida << "COMMENT_ADDED\n";
     
     // Enviar notificação para o autor do post
     notificarUsuario(rede, post->idAutor, idUsuario, idPost, NOTIF_COMMENT);
+}
+
+void listarComentarios(MiniRede& rede, int idPost, std::ostream& saida) {
+    Publicacao* post = PublicacaoPorId(rede, idPost);
+    if (post == nullptr) {
+        saida << "ERROR POST_NOT_FOUND\n";
+        return;
+    }
+
+    Comentario* comentarioAtual = post->listaComentarios;
+
+    saida << "COMMENTS_BEGIN\n";
+    while (comentarioAtual != nullptr) {
+        saida << "COMMENT " << comentarioAtual->id << " " 
+                << comentarioAtual->idAutor << " " 
+                << comentarioAtual->texto << "\n";
+        comentarioAtual = comentarioAtual->prox;
+    }
+    saida << "COMMENTS_END\n";
 }
 
 int main() {
@@ -898,6 +951,16 @@ Usuario* UsuarioPorUsername(MiniRede& rede, const char username[]) {
     }
     
     return nullptr; // Não encontrou
+}
+
+Publicacao* PublicacaoPorId(MiniRede& rede, int idPost) {
+    NoPublicacao* busca = AcharPublicacaoEanteriorPorId(rede, idPost);
+    if (busca == nullptr) {
+        return nullptr;
+    }
+    Publicacao* post = busca->post;
+    liberarListaPublicacao(busca);
+    return post;
 }
 
 NoPublicacao* AcharPublicacaoEanteriorPorId(MiniRede& rede, int idPost) { // devolve o primeiro nó de uma lista com o post encontrado e o segundo nó com o post anterior ao encontrado (ou nullptr se for o primeiro da lista)

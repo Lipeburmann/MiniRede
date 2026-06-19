@@ -125,6 +125,7 @@ Usuario* UsuarioPorId(MiniRede& rede, int id);
 // - buscar usuario por username
 Usuario* UsuarioPorUsername(MiniRede& rede, const char username[]);
 // - buscar publicacao por id
+Publicacao* PublicacaoPorId(MiniRede& rede, int idPost);
 NoPublicacao* AcharPublicacaoEanteriorPorId(MiniRede& rede, int idPost);
 // - inserir/listar/liberar arvore
 void liberarArvore(NoUsuarioBST* raiz);
@@ -156,6 +157,8 @@ void notificarUsuario(MiniRede& rede, int idUsuario, int idOrigem, int idPost, T
 
 void unfollowUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida);
 void removerPost(MiniRede& rede, int idPost, std::ostream& saida);
+
 void comentar(MiniRede& rede, int idUsuario, int idPost, int idComentario, const char texto[], std::ostream& saida);
+void listarComentarios(MiniRede& rede, int idPost, std::ostream& saida);
 
 #endif
