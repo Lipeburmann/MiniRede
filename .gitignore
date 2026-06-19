@@ -10,3 +10,6 @@
 # Ignorar lixos do sistema operacional
 .DS_Store
 Thumbs.db
+
+# Ignorar arquivos de saída gerados pelos testes
+saida_*.txt

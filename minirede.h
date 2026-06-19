@@ -23,11 +23,12 @@ struct IntNode {
 // Estrutura para as Notificações
 enum TipoNotificacao {
     NOTIF_FOLLOW,
-    NOTIF_LIKE
+    NOTIF_LIKE,
+    NOTIF_COMMENT
 };
 
 struct Notificacao {
-    // Pode ser "FOLLOW" ou "LIKE"
+    // Pode ser "FOLLOW" , "LIKE" ou "COMMENT"
     TipoNotificacao tipo;
     int idOrigem;
     int idPost; // Só usado se for curtida
@@ -58,12 +59,20 @@ struct NoPublicacao{ // Estrutura para lista encadeada temporária de publicaç�
     NoPublicacao* prox;
 };
 
+struct Comentario {
+    int id;
+    int idAutor;
+    char texto[TAM_TEXTO];
+    Comentario* prox; // Para criar uma lista de comentários em cada post
+};
+
 struct Publicacao {
     int id;
     int idAutor;
     int timestamp;
     char texto[TAM_TEXTO];
     int curtidas;
+    Comentario* listaComentarios; // Lista de comentários sobre a publicação
     IntNode* listaCurtidas; // Lista de IDs de quem curtiu (para evitar curtida dupla)
     Publicacao* prox_global;       // Caso decida guardar as publicações em uma lista global
     Publicacao* prox_autor;              // Caso decida guardar as publicações em uma lista do autor
@@ -116,7 +125,7 @@ Usuario* UsuarioPorId(MiniRede& rede, int id);
 // - buscar usuario por username
 Usuario* UsuarioPorUsername(MiniRede& rede, const char username[]);
 // - buscar publicacao por id
-Publicacao* AcharPublicacaoPorId(MiniRede& rede, int idPost);
+NoPublicacao* AcharPublicacaoEanteriorPorId(MiniRede& rede, int idPost);
 // - inserir/listar/liberar arvore
 void liberarArvore(NoUsuarioBST* raiz);
 // - inserir/buscar/liberar tabela hash
@@ -141,5 +150,12 @@ NoPublicacao* ListarPostsSeguindo(MiniRede& rede, Usuario* usuario);
 NoPublicacao* SelecionarKPostsMaisCurtidos(Publicacao* posts, int k);
 NoPublicacao* OrdenarPostsPorCurtidas(NoPublicacao* posts); //ordena
 
+void notificarUsuario(MiniRede& rede, int idUsuario, int idOrigem, int idPost, TipoNotificacao tipo);
+
+//extras
+
+void unfollowUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida);
+void removerPost(MiniRede& rede, int idPost, std::ostream& saida);
+void comentar(MiniRede& rede, int idUsuario, int idPost, int idComentario, const char texto[], std::ostream& saida);
 
 #endif

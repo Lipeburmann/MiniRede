@@ -66,20 +66,36 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
         } else if (comando == "FIND_USER") {
             int id;
             ss >> id;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             buscarUsuarioPorId(rede, id, saida);
         } else if (comando == "FIND_USERNAME") {
             char username[TAM_USERNAME];
             ss >> username;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             buscarUsuarioPorUsername(rede, username, saida);
         } else if (comando == "LIST_USERS") {
             listarUsuarios(rede, saida);
         } else if (comando == "FOLLOW") {
             int idSeguidor, idSeguido;
             ss >> idSeguidor >> idSeguido;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             seguirUsuario(rede, idSeguidor, idSeguido, saida);
         } else if (comando == "LIST_FOLLOWING") {
             int idUsuario;
             ss >> idUsuario;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             listarSeguindo(rede, idUsuario, saida);
         } else if (comando == "ADD_POST") {
             int idPost, idAutor, timestamp;
@@ -91,14 +107,26 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
         } else if (comando == "LIKE") {
             int idUsuario, idPost;
             ss >> idUsuario >> idPost;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             curtirPublicacao(rede, idUsuario, idPost, saida);
         } else if (comando == "GET_NOTIFICATIONS") {
             int idUsuario, k;
             ss >> idUsuario >> k;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             consultarNotificacoes(rede, idUsuario, k, saida);
         } else if (comando == "FEED") {
             int idUsuario, k;
             ss >> idUsuario >> k;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             gerarFeed(rede, idUsuario, k, saida);
         } else if (comando == "TOP_POSTS") {
             int k;
@@ -107,8 +135,28 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
         } else if (comando == "UNFOLLOW") {
             int idSeguidor, idSeguido;
             ss >> idSeguidor >> idSeguido;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
             unfollowUsuario(rede, idSeguidor, idSeguido, saida);
-        } else {
+        } else if (comando == "REMOVE_POST") {
+            int idPost;
+            ss >> idPost;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
+            removerPost(rede, idPost, saida);
+        } else if (comando == "COMMENT") {
+            int idUsuario, idPost, idComentario;
+            char texto[TAM_TEXTO];
+            ss >> idUsuario >> idPost >> idComentario;
+            ss.get(); // Consumir o espaço antes do texto
+            ss.getline(texto, TAM_TEXTO); // Ler o texto do comentário
+            comentar(rede, idUsuario, idPost, idComentario, texto, saida);
+        }
+        else {
             saida << "ERROR INVALID_COMMAND\n";
         }
     }
@@ -287,20 +335,7 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
     }
 
     // 6. Adiciona a notificação na fila do usuário SEGUIDO 
-    Notificacao* novaNotif = new Notificacao;
-    novaNotif->tipo = NOTIF_FOLLOW;
-    novaNotif->idOrigem = idSeguidor;
-    novaNotif->idPost = 0; // Não é usado para FOLLOW, mas é bom zerar
-    novaNotif->prox = nullptr;
-
-    // Lógica de Fila (FIFO)
-    if (seguido->filaNotif.inicio == nullptr) {
-        seguido->filaNotif.inicio = novaNotif;
-        seguido->filaNotif.fim = novaNotif;
-    } else {
-        seguido->filaNotif.fim->prox = novaNotif;
-        seguido->filaNotif.fim = novaNotif;
-    }
+    notificarUsuario(rede, idSeguido, idSeguidor, -1, NOTIF_FOLLOW); // O '-1' indica que não tem post associado
 
     // 7. Imprime sucesso 
     saida << "FOLLOWED\n";
@@ -361,7 +396,6 @@ void unfollowUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream
     saida << "UNFOLLOWED\n";
 }
 
-
 void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
     Usuario* usuario = UsuarioPorId(rede, idUsuario);
     
@@ -402,7 +436,7 @@ void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp,
     }
 
     // 2. Verificar se o ID do post já existe na rede 
-    Publicacao* postExistente = AcharPublicacaoPorId(rede, idPost);
+    NoPublicacao* postExistente = AcharPublicacaoEanteriorPorId(rede, idPost);
     if (postExistente != nullptr) {
         saida << "ERROR POST_EXISTS\n"; // 
         return;
@@ -438,8 +472,9 @@ void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& s
     }
 
     // 2. Achar post
-    Publicacao* post = AcharPublicacaoPorId(rede, idPost);
-    if (post == nullptr) {
+    NoPublicacao* busca = AcharPublicacaoEanteriorPorId(rede, idPost);
+    Publicacao* post = busca->post;
+    if (busca == nullptr) {
         saida << "ERROR POST_NOT_FOUND\n"; // [cite: 81]
         return;
     }
@@ -464,28 +499,12 @@ void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& s
     post->curtidas++;
 
     IntNode* nova_curtida = new IntNode;
-    nova_curtida->id = idUsuario; // O ponto e vírgula arrumado aqui!
+    nova_curtida->id = idUsuario; 
     nova_curtida->prox = post->listaCurtidas;
     post->listaCurtidas = nova_curtida;
 
     // 5. Enviar Notificação para o Autor do Post
-    Usuario* autor = UsuarioPorId(rede, post->idAutor);
-    if (autor != nullptr) {
-        Notificacao* novaNotif = new Notificacao;
-        novaNotif->tipo = NOTIF_LIKE;
-        novaNotif->idOrigem = idUsuario;
-        novaNotif->idPost = idPost;
-        novaNotif->prox = nullptr;
-
-        // Inserir no final da fila (FIFO)
-        if (autor->filaNotif.inicio == nullptr) {
-            autor->filaNotif.inicio = novaNotif;
-            autor->filaNotif.fim = novaNotif;
-        } else {
-            autor->filaNotif.fim->prox = novaNotif;
-            autor->filaNotif.fim = novaNotif;
-        }
-    }
+    notificarUsuario(rede, post->idAutor, idUsuario, idPost, NOTIF_LIKE);
 
     // 6. Mensagem de Sucesso
     saida << "LIKED\n"; // 
@@ -581,6 +600,79 @@ void listarTopPosts(MiniRede& rede, int k, std::ostream& saida) {
     liberarListaPublicacao(k_mais_curtidas);
 }
 
+void removerPost(MiniRede& rede, int idPost, std::ostream& saida) {
+    NoPublicacao* resultadoBusca = AcharPublicacaoEanteriorPorId(rede, idPost);
+    Publicacao* postAtual = resultadoBusca->post;
+    Publicacao* postAnterior = resultadoBusca->prox->post;
+
+    if (postAtual == nullptr) {
+        saida << "ERROR POST_NOT_FOUND\n";
+        return; // Post não encontrado, nada a remover
+    }
+
+    // 2. Remover da lista global
+    if (postAnterior == nullptr) {
+        // O post a remover é o primeiro da lista
+        rede.listaPublicacoes = postAtual->prox_global;
+    } else {
+        // O post a remover está no meio ou no fim da lista
+        postAnterior->prox_global = postAtual->prox_global;
+    }
+
+    // 3. Remover da lista do autor
+    Usuario* autor = UsuarioPorId(rede, postAtual->idAutor);
+    if (autor != nullptr) {
+        Publicacao* postAutorAtual = autor->postsCriados;
+        Publicacao* postAutorAnterior = nullptr;
+
+        while (postAutorAtual != nullptr && postAutorAtual->id != idPost) {
+            postAutorAnterior = postAutorAtual;
+            postAutorAtual = postAutorAtual->prox_autor;
+        }
+
+        if (postAutorAtual != nullptr) {
+            if (postAutorAnterior == nullptr) {
+                autor->postsCriados = postAutorAtual->prox_autor;
+            } else {
+                postAutorAnterior->prox_autor = postAutorAtual->prox_autor;
+            }
+        }
+    }
+
+    saida << "POST_REMOVED\n";
+
+    // 4. Liberar a memória do post removido
+    liberarListaIntNode(postAtual->listaCurtidas);
+    delete postAtual;
+}
+
+void comentar(MiniRede& rede, int idUsuario, int idPost, int idComentario, const char texto[], std::ostream& saida) {
+    // Implementação similar a curtirPublicacao, mas criando um novo comentário e adicionando à lista de comentários do post
+    NoPublicacao* busca = AcharPublicacaoEanteriorPorId(rede, idPost);
+    if (busca == nullptr) {
+        saida << "ERROR POST_NOT_FOUND\n";
+        return;
+    }
+
+    Usuario* usuario = UsuarioPorId(rede, idUsuario);
+    if (usuario == nullptr) {
+        saida << "ERROR USER_NOT_FOUND\n";
+        return;
+    }
+
+    Publicacao* post = busca->post;
+
+    Comentario* novoComentario = new Comentario;
+    novoComentario->idAutor = idUsuario;
+    strcpy(novoComentario->texto, texto);
+    novoComentario->id = idComentario;
+    novoComentario->prox = post->listaComentarios;
+    post->listaComentarios = novoComentario;
+    
+    // Enviar notificação para o autor do post
+    notificarUsuario(rede, post->idAutor, idUsuario, idPost, NOTIF_COMMENT);
+}
+
 int main() {
     MiniRede rede;
 
@@ -592,6 +684,30 @@ int main() {
 }
 
 // --------------- auxiliares ---------------------
+
+//***Notificações
+
+void notificarUsuario(MiniRede& rede, int idUsuario, int idOrigem, int idPost, TipoNotificacao tipo) {
+    Usuario* usuario = UsuarioPorId(rede, idUsuario);
+    if (usuario == nullptr) {
+        return;
+    }
+
+    Notificacao* novaNotif = new Notificacao;
+    novaNotif->tipo = tipo;
+    novaNotif->idOrigem = idOrigem;
+    novaNotif->idPost = idPost;
+    novaNotif->prox = nullptr;
+
+    // Lógica de Fila (FIFO)
+    if (usuario->filaNotif.inicio == nullptr) {
+        usuario->filaNotif.inicio = novaNotif;
+        usuario->filaNotif.fim = novaNotif;
+    } else {
+        usuario->filaNotif.fim->prox = novaNotif;
+        usuario->filaNotif.fim = novaNotif;
+    }
+}
 
 // ***Feed e ranking
 
@@ -784,16 +900,34 @@ Usuario* UsuarioPorUsername(MiniRede& rede, const char username[]) {
     return nullptr; // Não encontrou
 }
 
-Publicacao* AcharPublicacaoPorId(MiniRede& rede, int idPost) {
+NoPublicacao* AcharPublicacaoEanteriorPorId(MiniRede& rede, int idPost) { // devolve o primeiro nó de uma lista com o post encontrado e o segundo nó com o post anterior ao encontrado (ou nullptr se for o primeiro da lista)
     Publicacao* post = rede.listaPublicacoes;
+    Publicacao* postAnterior = nullptr;
 
     while(post != nullptr){
         if (post->id == idPost) break;
-
+        postAnterior = post;
         post = post->prox_global;
     }
 
-    return post;
+    if (post == nullptr) {
+        return nullptr; // Post não encontrado
+    }
+
+    NoPublicacao* resultado = new NoPublicacao;
+    resultado->post = post;
+
+    if (postAnterior == nullptr) {
+        resultado->prox = nullptr; // O post encontrado é o primeiro da lista, não tem anterior
+    } 
+    else {
+        NoPublicacao* postAnteriorNo = new NoPublicacao;
+        postAnteriorNo->post = postAnterior;
+
+        resultado->prox = postAnteriorNo;
+    }
+
+    return resultado;
 }
 
 //***Liberar memória
