@@ -688,13 +688,11 @@ void removerPost(MiniRede& rede, int idPost, std::ostream& saida) {
 
 void comentar(MiniRede& rede, int idUsuario, int idPost, int idComentario, const char texto[], std::ostream& saida) {
     // Implementação similar a curtirPublicacao, mas criando um novo comentário e adicionando à lista de comentários do post
-    NoPublicacao* busca = AcharPublicacaoEanteriorPorId(rede, idPost);
-    if (busca == nullptr) {
+    Publicacao* post = PublicacaoPorId(rede, idPost);
+    if (post == nullptr) {
         saida << "ERROR POST_NOT_FOUND\n";
         return;
     }
-    Publicacao* post = busca->post;
-    liberarListaPublicacao(busca);
 
     Usuario* usuario = UsuarioPorId(rede, idUsuario);
     if (usuario == nullptr) {

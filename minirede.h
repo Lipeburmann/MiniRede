@@ -131,7 +131,7 @@ Usuario* UsuarioPorId(MiniRede& rede, int id);
 Usuario* UsuarioPorUsername(MiniRede& rede, const char username[]);
 // - buscar publicacao por id
 Publicacao* PublicacaoPorId(MiniRede& rede, int idPost);
-NoPublicacao* AcharPublicacaoEanteriorPorId(MiniRede& rede, int idPost);
+NoPublicacao* AcharPublicacaoEanteriorPorId(MiniRede& rede, int idPost); // usada para remover post
 // - inserir/listar/liberar arvore
 void liberarArvore(NoUsuarioBST* raiz);
 // - inserir/buscar/liberar tabela hash
