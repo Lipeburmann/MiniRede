@@ -171,7 +171,7 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
             ss.get(); // Consumir o espaço antes do texto
             ss.getline(texto, TAM_TEXTO); // Ler o texto do comentário
             comentar(rede, idUsuario, idPost, idComentario, texto, saida);
-        } else if (comando == "SEE_COMMENTS") {
+        } else if (comando == "LIST_COMMENTS") {
             int idPost;
             ss >> idPost;
             if (ss.fail()) {
@@ -179,6 +179,14 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
                 continue;
             }
             listarComentarios(rede, idPost, saida);
+        } else if (comando == "LIST_RECENT_POSTS") {
+            int k;
+            ss >> k;
+            if (ss.fail()) {
+                saida << "ERROR INVALID_COMMAND\n";
+                continue;
+            }
+            imprimirXPostsGlobal(rede, k, saida);
         }
         else {
             saida << "ERROR INVALID_COMMAND\n";
@@ -726,6 +734,21 @@ void listarComentarios(MiniRede& rede, int idPost, std::ostream& saida) {
     saida << "COMMENTS_END\n";
 }
 
+void imprimirXPostsGlobal(MiniRede& rede, int x, std::ostream& saida) {
+    saida << "POSTS_BEGIN\n";
+    int contador = 0;
+    Publicacao* atual = rede.listaPublicacoes;
+    while (contador < x && atual != nullptr) {
+        saida << "POST " << atual->id << " " << atual->idAutor << " "
+              << atual->timestamp << " "
+              << atual->curtidas << " "
+              << atual->texto << "\n";
+        atual = atual->prox_global;
+        contador++;
+    }
+    saida << "POSTS_END\n";
+}
+
 int main() {
     MiniRede rede;
 
@@ -784,19 +807,31 @@ NoPublicacao* ListarPostsSeguindo(MiniRede& rede, Usuario* usuario) { //cria uma
     while (seguindo_atual != nullptr) {
         Usuario* seguido = UsuarioPorId(rede, seguindo_atual->id);
         if (seguido != nullptr) {
-            Publicacao* post_atual = seguido->postsCriados;
-            while (post_atual != nullptr) {
-                NoPublicacao* novo_no = new NoPublicacao;
-                novo_no->post = post_atual;
-                novo_no->prox = postsEncontrados;
-                postsEncontrados = novo_no;
 
-                post_atual = post_atual->prox_autor; // Acessa o próximo post do mesmo autor usando prox_autor
-            }
+            postsEncontrados->prox = SelecionarKPosts(seguido->postsCriados, 1000000, BUSCA_USUARIO); //adiciona os posts do usuário seguido na lista de posts encontrados
         }
         seguindo_atual = seguindo_atual->prox;
     }
     return postsEncontrados;
+}
+
+NoPublicacao* SelecionarKPosts(Publicacao* posts, int k, TipoBuscaPublicacao tipo) { //seleciona os 'k' posts de uma lista qualquer, caso queira todos basta usar um k muito grande
+    NoPublicacao* k_posts = nullptr;
+    int contador = 0;
+    Publicacao* atual = posts;
+    while (atual != nullptr && contador < k) {
+        NoPublicacao* novo_no = new NoPublicacao;
+        novo_no->post = atual;
+        novo_no->prox = k_posts;
+        k_posts = novo_no;
+        if (tipo == BUSCA_USUARIO) {
+            atual = atual->prox_autor; // Acessa o próximo post do mesmo autor usando prox_autor
+        } else {
+            atual = atual->prox_global;
+        }
+        contador++;
+    }
+    return k_posts;
 }
 
 NoPublicacao* SelecionarKPostsMaisRecentes(NoPublicacao* posts, int k) { //seleciona os 'k' posts mais recentes da lista encadeada de NoPublicacao (que tem os posts dos usuários que ele segue)

@@ -59,6 +59,11 @@ struct NoPublicacao{ // Estrutura para lista encadeada temporária de publicaç�
     NoPublicacao* prox;
 };
 
+enum TipoBuscaPublicacao {
+    BUSCA_GLOBAL,
+    BUSCA_USUARIO
+};
+
 struct Comentario {
     int id;
     int idAutor;
@@ -142,10 +147,12 @@ void imprimirXPosts(NoPublicacao* lista, int k, std::ostream& saida);
 void liberarListaPublicacao(NoPublicacao* inicio);
 void liberarPublicacoes(Publicacao* inicio);
 
+NoPublicacao* SelecionarKPosts(Publicacao* posts, int k, TipoBuscaPublicacao tipo); //cria a lista auxiliar de posts para feed ou ranking
+
 //auxiliares para gerar feed
 NoPublicacao* SelecionarKPostsMaisRecentes(NoPublicacao* posts, int k);
 NoPublicacao* OrdenarPostsPorTimestamp(NoPublicacao* posts); //ordena
-NoPublicacao* ListarPostsSeguindo(MiniRede& rede, Usuario* usuario);
+NoPublicacao* ListarPostsSeguindo(MiniRede& rede, Usuario* usuario); //acessa os seguidos do usuário e seleciona os posts para o feed
 
 //auxiliares para listar top posts
 NoPublicacao* SelecionarKPostsMaisCurtidos(Publicacao* posts, int k);
@@ -160,5 +167,7 @@ void removerPost(MiniRede& rede, int idPost, std::ostream& saida);
 
 void comentar(MiniRede& rede, int idUsuario, int idPost, int idComentario, const char texto[], std::ostream& saida);
 void listarComentarios(MiniRede& rede, int idPost, std::ostream& saida);
+
+void imprimirXPostsGlobal(MiniRede& rede, int k, std::ostream& saida);
 
 #endif
