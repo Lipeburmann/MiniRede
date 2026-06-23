@@ -142,6 +142,8 @@ NoPublicacao *AcharPublicacaoEanteriorPorId(MiniRede &rede, int idPost); // usad
 void liberarArvore(NoUsuarioBST *raiz);
 // - inserir/buscar/liberar tabela hash
 void liberarTabelaHash(NoUsuarioHash *hashUsernames[]);
+//liberar comnetario
+void liberarListaComentarios(Comentario *inicio);
 // - enfileirar/desenfileirar notificacoes
 void liberarFilaNotificacoes(Notificacao *inicio);
 // - manipular listas encadeadas
