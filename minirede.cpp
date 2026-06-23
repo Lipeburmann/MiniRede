@@ -30,6 +30,7 @@ void liberarMiniRede(MiniRede &rede)
         Publicacao *temp = postAtual;
         postAtual = postAtual->prox_global;
         liberarListaIntNode(temp->listaCurtidas);
+        liberarListaComentarios(temp->listaComentarios);
         delete temp;
     }
     rede.listaPublicacoes = nullptr;
@@ -531,6 +532,7 @@ void cadastrarPublicacao(MiniRede &rede, int idPost, int idAutor, int timestamp,
     nova->timestamp = timestamp;
     strcpy(nova->texto, texto); 
     nova->listaCurtidas = nullptr;
+    nova->listaComentarios = nullptr;
 
     //insere na lista global da rede
     nova->prox_global = rede.listaPublicacoes;
@@ -742,6 +744,7 @@ void removerPost(MiniRede &rede, int idPost, std::ostream &saida)
 
     saida << "POST_REMOVED\n";
     liberarListaIntNode(postAtual->listaCurtidas);
+    liberarListaComentarios(postAtual->listaComentarios);
     delete postAtual;
 }
 
@@ -882,8 +885,10 @@ void imprimirXPosts(NoPublicacao *post, int x, std::ostream &saida)
     }
 }
 
+
 NoPublicacao *ListarPostsSeguindo(MiniRede &rede, Usuario *usuario)
-{ // cria uma lista encadeada de NoPublicacao com os posts dos usuários que ele segue
+{
+    // cria uma lista encadeada de NoPublicacao com os posts dos usuários que ele segue
     NoPublicacao *postsEncontrados = nullptr;
     IntNode *seguindo_atual = usuario->seguidos;
     while (seguindo_atual != nullptr)
@@ -891,8 +896,17 @@ NoPublicacao *ListarPostsSeguindo(MiniRede &rede, Usuario *usuario)
         Usuario *seguido = UsuarioPorId(rede, seguindo_atual->id);
         if (seguido != nullptr)
         {
-
-            postsEncontrados->prox = SelecionarKPosts(seguido->postsCriados, 1000000, BUSCA_USUARIO); // adiciona os posts do usuário seguido na lista de posts encontrados
+            NoPublicacao *postsSeguido = SelecionarKPosts(seguido->postsCriados, 1000000, BUSCA_USUARIO);
+            if (postsEncontrados == nullptr)
+            {
+                postsEncontrados = postsSeguido;
+            }
+            else
+            {
+                NoPublicacao *fim = postsEncontrados;
+                while (fim->prox != nullptr) fim = fim->prox;
+                fim->prox = postsSeguido;
+            }
         }
         seguindo_atual = seguindo_atual->prox;
     }
@@ -1142,7 +1156,6 @@ NoPublicacao *AcharPublicacaoEanteriorPorId(MiniRede &rede, int idPost)
 
     NoPublicacao *resultado = new NoPublicacao;
     resultado->post = post;
-
     if (postAnterior == nullptr)
     {
         resultado->prox = nullptr; // o post encontrado é o primeiro da lista, não tem anterior
@@ -1151,7 +1164,7 @@ NoPublicacao *AcharPublicacaoEanteriorPorId(MiniRede &rede, int idPost)
     {
         NoPublicacao *postAnteriorNo = new NoPublicacao;
         postAnteriorNo->post = postAnterior;
-
+        postAnteriorNo->prox = nullptr;
         resultado->prox = postAnteriorNo;
     }
 
@@ -1254,5 +1267,15 @@ void liberarPublicacoes(Publicacao *inicio)
         inicio = inicio->prox_global;             
         liberarListaIntNode(temp->listaCurtidas); // limpa a lista de curtidas do post
         delete temp;                              
+    }
+}
+
+void liberarListaComentarios(Comentario *inicio)
+{
+    while (inicio != nullptr)
+    {
+        Comentario *temp = inicio;
+        inicio = inicio->prox;
+        delete temp;
     }
 }
