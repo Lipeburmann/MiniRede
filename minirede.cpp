@@ -253,6 +253,10 @@ void processarComandos(MiniRede &rede, std::istream &entrada, std::ostream &said
             }
             buscarPublicacoesPorPalavra(rede, palavra, saida);
         }
+        else if (comando == "REMOVE_RECENT_POST")
+        {
+            removerPostMaisRecenteGlobal(rede, saida);
+        }
         else
         {
             saida << "ERROR INVALID_COMMAND\n";
