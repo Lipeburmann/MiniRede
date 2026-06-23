@@ -123,6 +123,7 @@ void listarSeguindo(MiniRede &rede, int idUsuario, std::ostream &saida);
 
 void cadastrarPublicacao(MiniRede &rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream &saida);
 void curtirPublicacao(MiniRede &rede, int idUsuario, int idPost, std::ostream &saida);
+void removerPostMaisRecenteGlobal(MiniRede &rede, std::ostream &saida);
 
 void consultarNotificacoes(MiniRede &rede, int idUsuario, int k, std::ostream &saida);
 void gerarFeed(MiniRede &rede, int idUsuario, int k, std::ostream &saida);
