@@ -824,6 +824,17 @@ void removerPost(MiniRede &rede, int idPost, std::ostream &saida)
     delete postAtual;
 }
 
+void removerPostMaisRecenteGlobal(MiniRede &rede, std::ostream &saida){
+    if (rede.listaPublicacoes == nullptr)
+    {
+        saida << "ERROR NO_POSTS\n";
+        return;
+    }
+
+    Publicacao *postMaisRecente = rede.listaPublicacoes; // O primeiro da lista global é o mais recente
+    removerPost(rede, postMaisRecente->id, saida);
+}
+
 void comentar(MiniRede &rede, int idUsuario, int idPost, int idComentario, const char texto[], std::ostream &saida)
 {
     // Implementação similar a curtirPublicacao, mas criando um novo comentário e adicionando à lista de comentários do post
