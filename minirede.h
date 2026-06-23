@@ -9,17 +9,15 @@ const int TAM_NOME = 100;
 const int TAM_TEXTO = 280;
 const int TAM_COMANDO = 30;
 const int TAM_HASH = 167;
-
-// Nó genérico de lista encadeada para guardar IDs (útil para Seguidores, Curtidas, etc)
+//////////////////////////////////////////////
+//geral
 struct IntNode
 {
     int id;
     IntNode *prox;
 };
 
-////////////////////////////////////////////////////////
-// as notificações de cada usuário devem ser armazenadas na exata ordem de chegada e devem ser removidas da memória logo após serem consultadas.
-//  Estrutura para as Notificações
+//Estrutura para as Notificações
 enum TipoNotificacao
 {
     NOTIF_FOLLOW,
@@ -29,14 +27,12 @@ enum TipoNotificacao
 
 struct Notificacao
 {
-    // Pode ser "FOLLOW" , "LIKE" ou "COMMENT"
-    TipoNotificacao tipo;
+    TipoNotificacao tipo; //follow,like,comment
     int idOrigem;
-    int idPost; // Só usado se for curtida
+    int idPost; 
     Notificacao *prox;
 };
 
-// Fila baseada em lista encadeada para cada usuário
 struct FilaNotificacoes
 {
     Notificacao *inicio;
@@ -44,6 +40,7 @@ struct FilaNotificacoes
 };
 
 /////////////////////////////////////////////////////
+
 struct Publicacao; // Forward declaration
 
 struct Usuario
@@ -52,13 +49,13 @@ struct Usuario
     char username[TAM_USERNAME];
     char nomeCompleto[TAM_NOME];
 
-    IntNode *seguidos;          // Lista de IDs de usuários que ele segue
-    Publicacao *postsCriados;   // Lista de posts que ele criou
-    FilaNotificacoes filaNotif; // Fila de notificações
+    IntNode *seguidos;          // lista de ids de usuários que ele segue
+    Publicacao *postsCriados;   // lista de posts que ele criou
+    FilaNotificacoes filaNotif; // fila de notificações
 };
 
 struct NoPublicacao
-{ // Estrutura para lista encadeada temporária de publicações (usada para feed e ranking)
+{ // estrutura para lista encadeada temporária de publicações 
     Publicacao *post;
     NoPublicacao *prox;
 };
@@ -74,7 +71,7 @@ struct Comentario
     int id;
     int idAutor;
     char texto[TAM_TEXTO];
-    Comentario *prox; // Para criar uma lista de comentários em cada post
+    Comentario *prox; // para criar uma lista de comentários em cada post
 };
 
 struct Publicacao
@@ -84,33 +81,32 @@ struct Publicacao
     int timestamp;
     char texto[TAM_TEXTO];
     int curtidas;
-    Comentario *listaComentarios; // Lista de comentários sobre a publicação
-    IntNode *listaCurtidas;       // Lista de IDs de quem curtiu (para evitar curtida dupla)
-    Publicacao *prox_global;      // Caso decida guardar as publicações em uma lista global
-    Publicacao *prox_autor;       // Caso decida guardar as publicações em uma lista do autor
+    Comentario *listaComentarios; // lista de comentários sobre a publicação
+    IntNode *listaCurtidas;       // lista de ids de quem curtiu 
+    Publicacao *prox_global;      //para lista global
+    Publicacao *prox_autor;       //para lista do autor
 };
 
-// - nos para arvore binaria de usuarios por id
+
 struct NoUsuarioBST
 {
     Usuario *user;
     NoUsuarioBST *esq;
     NoUsuarioBST *dir;
 };
-// - nos para tabela hash de usernames
+
 struct NoUsuarioHash
 {
     Usuario *user;
     NoUsuarioHash *prox;
 };
 
-// Os campos de cada struct fazem parte do projeto dos alunos.
 
 struct MiniRede
 {
     NoUsuarioBST *raizUsuarios;
-    NoUsuarioHash *hashUsernames[TAM_HASH]; // O tamanho da hash pode ser um número primo
-    Publicacao *listaPublicacoes;           // Lista encadeada simples com todos os posts globais
+    NoUsuarioHash *hashUsernames[TAM_HASH]; 
+    Publicacao *listaPublicacoes;           
 };
 
 void inicializarMiniRede(MiniRede &rede);
@@ -132,9 +128,8 @@ void consultarNotificacoes(MiniRede &rede, int idUsuario, int k, std::ostream &s
 void gerarFeed(MiniRede &rede, int idUsuario, int k, std::ostream &saida);
 void listarTopPosts(MiniRede &rede, int k, std::ostream &saida);
 
-// TODO: declarar aqui as funcoes auxiliares escolhidas pelo grupo.
-//
-// Exemplos de responsabilidades auxiliares:
+
+//responsabilidades auxiliares:
 // - buscar usuario por id
 Usuario *UsuarioPorId(MiniRede &rede, int id);
 // - buscar usuario por username
@@ -150,7 +145,6 @@ void liberarTabelaHash(NoUsuarioHash *hashUsernames[]);
 void liberarFilaNotificacoes(Notificacao *inicio);
 // - manipular listas encadeadas
 void liberarListaIntNode(IntNode *inicio);
-// - ordenar vetores auxiliares para feed e ranking
 // - imprimir saida formatada de usuários, posts, feeds, etc
 void imprimirArvoreInOrdem(NoUsuarioBST *raiz, std::ostream &saida);
 void imprimirXPosts(NoPublicacao *lista, int k, std::ostream &saida);

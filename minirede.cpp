@@ -3,11 +3,8 @@
 
 void inicializarMiniRede(MiniRede &rede)
 {
-    // Garante que a árvore comece vazia
     rede.raizUsuarios = nullptr;
     rede.listaPublicacoes = nullptr;
-
-    // Garante que todas as gavetas da Tabela Hash comecem vazias
     for (int i = 0; i < TAM_HASH; i++)
     {
         rede.hashUsernames[i] = nullptr;
@@ -16,7 +13,6 @@ void inicializarMiniRede(MiniRede &rede)
 
 int calcularHash(const char username[])
 {
-    // Ela vai pegar o texto do username, somar os valores das letras e dividir pelo tamanho do vetor , pegando o resto da divisão
     int hash = 0;
     for (int i = 0; username[i] != '\0'; i++)
     {
@@ -27,7 +23,7 @@ int calcularHash(const char username[])
 
 void liberarMiniRede(MiniRede &rede)
 {
-    // 1. Limpar a lista global de publicações
+    // Limpa a lista global de publicações
     Publicacao *postAtual = rede.listaPublicacoes;
     while (postAtual != nullptr)
     {
@@ -37,12 +33,9 @@ void liberarMiniRede(MiniRede &rede)
         delete temp;
     }
     rede.listaPublicacoes = nullptr;
-
-    // 3. Limpar a Árvore Binária (que finalmente deleta os usuários)
+    //limpa arvore e hash
     liberarArvore(rede.raizUsuarios);
     rede.raizUsuarios = nullptr;
-
-    // 2. Chamar a sua nova função de limpar a Hash
     liberarTabelaHash(rede.hashUsernames);
 }
 
@@ -266,9 +259,7 @@ void processarComandos(MiniRede &rede, std::istream &entrada, std::ostream &said
 
 void cadastrarUsuario(MiniRede &rede, int id, const char username[], const char nomeCompleto[], std::ostream &saida)
 {
-    // ==========================================
-    // PASSO A: Verificar se o ID já existe (Busca na Árvore)
-    // ==========================================
+    // verifica se o id ja existe 
     bool idExiste = false;
     Usuario *usuario_possivel = UsuarioPorId(rede, id);
     if (usuario_possivel != nullptr)
@@ -276,10 +267,8 @@ void cadastrarUsuario(MiniRede &rede, int id, const char username[], const char 
         idExiste = true;
     }
 
-    // ==========================================
-    // PASSO B: Verificar se Username já existe (Busca na Hash)
-    // ==========================================
 
+    // verifica se username ja existe 
     bool userExiste = false;
 
     usuario_possivel = UsuarioPorUsername(rede, username);
@@ -288,39 +277,32 @@ void cadastrarUsuario(MiniRede &rede, int id, const char username[], const char 
         userExiste = true;
     }
 
-    // Se ID ou Username já estiverem em uso, barra o cadastro
     if (idExiste || userExiste)
     {
         saida << "ERROR USER_EXISTS\n";
-        return; // Sai da função, não cadastra nada
+        return; 
     }
 
-    // ==========================================
-    // PASSO C: Criar o novo Usuário na memória
-    // ==========================================
+    //se passou no teste,cadastra novo usuario
     Usuario *novoUser = new Usuario;
     novoUser->id = id;
     strcpy(novoUser->username, username);
     strcpy(novoUser->nomeCompleto, nomeCompleto);
-    // Inicializando as estruturas internas do usuário como vazias
     novoUser->seguidos = nullptr;
     novoUser->postsCriados = nullptr;
     novoUser->filaNotif.inicio = nullptr;
     novoUser->filaNotif.fim = nullptr;
 
-    // ==========================================
-    // PASSO D: Inserir na Árvore Binária (por ID)
-    // ==========================================
+    // insere na arvore binária pelo id
     NoUsuarioBST *novoNoBST = new NoUsuarioBST{novoUser, nullptr, nullptr};
-
+    //primeiro ve se a arvore ta vazia
     if (rede.raizUsuarios == nullptr)
     {
-        // A árvore está vazia, ele será a raiz!
         rede.raizUsuarios = novoNoBST;
     }
+    //depois ve onde ele deve ficar
     else
     {
-        // Descer na árvore até achar a folha certa para pendurar o novo nó
         NoUsuarioBST *pai = nullptr;
         NoUsuarioBST *temp = rede.raizUsuarios;
 
@@ -339,17 +321,10 @@ void cadastrarUsuario(MiniRede &rede, int id, const char username[], const char 
             pai->dir = novoNoBST;
     }
 
-    // ==========================================
-    // PASSO E: Inserir na Tabela Hash (por Username)
-    // ==========================================
-    // Inserimos sempre no início da lista encadeada daquela gaveta (é mais fácil e rápido)
+    // insere na Tabela Hash pelo username
     int indiceHash = calcularHash(username);
     NoUsuarioHash *novoNoHash = new NoUsuarioHash{novoUser, rede.hashUsernames[indiceHash]};
     rede.hashUsernames[indiceHash] = novoNoHash;
-
-    // ==========================================
-    // PASSO F: Sucesso!
-    // ==========================================
     saida << "USER_ADDED\n";
 }
 
@@ -383,102 +358,86 @@ void imprimirArvoreInOrdem(NoUsuarioBST *no, std::ostream &saida)
 {
     if (no == nullptr)
     {
-        return; // Caso base da recursão
+        return; // caso base da recursao
     }
 
-    // 1. Visita toda a subárvore esquerda (IDs menores)
+    // visita toda a subarvore esquerda 
     imprimirArvoreInOrdem(no->esq, saida);
 
-    // 2. Imprime o nó atual [cite: 49]
+    // imprime o nó atual 
     saida << "USER " << no->user->id << " "
           << no->user->username << " "
           << no->user->nomeCompleto << "\n";
 
-    // 3. Visita toda a subárvore direita (IDs maiores)
+    // visita toda a subarvore direita 
     imprimirArvoreInOrdem(no->dir, saida);
 }
 
 void listarUsuarios(MiniRede &rede, std::ostream &saida)
 {
-    saida << "USERS_BEGIN\n"; //
-
-    // Chama a função recursiva passando a raiz da árvore
+    saida << "USERS_BEGIN\n"; 
     imprimirArvoreInOrdem(rede.raizUsuarios, saida);
-
-    saida << "USERS_END\n"; //
+    saida << "USERS_END\n"; 
 }
 
 void seguirUsuario(MiniRede &rede, int idSeguidor, int idSeguido, std::ostream &saida)
 {
-    // 1. Verifica se o usuário está tentando seguir a si mesmo
     if (idSeguidor == idSeguido)
     {
         saida << "ERROR CANNOT_FOLLOW_SELF\n";
         return;
     }
-
-    // 2. Busca os dois usuários usando a sua função auxiliar
     Usuario *seguidor = UsuarioPorId(rede, idSeguidor);
     Usuario *seguido = UsuarioPorId(rede, idSeguido);
-
-    // Se algum deles não for encontrado [cite: 55]
     if (seguidor == nullptr || seguido == nullptr)
     {
         saida << "ERROR USER_NOT_FOUND\n";
         return;
     }
 
-    // 3. Procura a posição correta para inserir na lista ordenada do seguidor
+     // percorre a lista de quem segue
     IntNode *atual = seguidor->seguidos;
     IntNode *anterior = nullptr;
-
-    // Caminha pela lista enquanto o ID atual for MENOR que o ID que queremos inserir
     while (atual != nullptr && atual->id < idSeguido)
     {
         anterior = atual;
         atual = atual->prox;
     }
 
-    // 4. Verifica se já segue (parou em um nó com o mesmo ID exato)
     if (atual != nullptr && atual->id == idSeguido)
     {
         saida << "ERROR ALREADY_FOLLOWING\n";
         return;
     }
 
-    // 5. Cria o novo nó de ID e insere na posição correta (mantendo a ordem crescente)
+    // cria o novo nó de id e insere na posição correta
     IntNode *novoSeguido = new IntNode;
     novoSeguido->id = idSeguido;
     novoSeguido->prox = atual;
 
     if (anterior == nullptr)
     {
-        // Insere no início (a lista estava vazia ou o ID é o menor de todos)
+        // insere no início 
         seguidor->seguidos = novoSeguido;
     }
     else
     {
-        // Insere no meio ou no fim
+        // insere no meio ou no fim
         anterior->prox = novoSeguido;
     }
 
-    // 6. Adiciona a notificação na fila do usuário SEGUIDO
     notificarUsuario(rede, idSeguido, idSeguidor, -1, NOTIF_FOLLOW); // O '-1' indica que não tem post associado
 
-    // 7. Imprime sucesso
     saida << "FOLLOWED\n";
 }
 
 void unfollowUsuario(MiniRede &rede, int idSeguidor, int idSeguido, std::ostream &saida)
 {
-    // 1. Verifica se está tentando dar unfollow em si mesmo
     if (idSeguidor == idSeguido)
     {
         saida << "ERROR CANNOT_UNFOLLOW_SELF\n";
         return;
     }
-
-    // 2. Busca os usuários para garantir que ambos existem
     Usuario *seguidor = UsuarioPorId(rede, idSeguidor);
     Usuario *seguido = UsuarioPorId(rede, idSeguido);
 
@@ -488,47 +447,32 @@ void unfollowUsuario(MiniRede &rede, int idSeguidor, int idSeguido, std::ostream
         return;
     }
 
-    // 3. Prepara os ponteiros para percorrer a lista
+    // percorre a lista
     IntNode *atual = seguidor->seguidos;
     IntNode *anterior = nullptr;
-
-    // Caminha pela lista procurando o ID exato.
-    // Como a lista está em ordem crescente, podemos parar se acharmos um ID maior.
     while (atual != nullptr && atual->id < idSeguido)
     {
         anterior = atual;
         atual = atual->prox;
     }
-
-    // 4. Verifica se o usuário realmente seguia a pessoa
-    // Se a lista acabou (atual == nullptr) ou parou num ID diferente, ele não seguia!
     if (atual == nullptr || atual->id != idSeguido)
     {
         saida << "ERROR NOT_FOLLOWING\n";
         return;
     }
 
-    // ==========================================
-    // 5. A MÁGICA DA REMOÇÃO (Descosturando o nó)
-    // ==========================================
-
+    //remoçao
     if (anterior == nullptr)
     {
-        // Cenário A: O cara que queremos remover é o PRIMEIRO da fila
-        // O início da lista passa a ser o segundo cara (atual->prox)
+        // o cara que queremos remover é o primeiro da fila,inicio vira o prox
         seguidor->seguidos = atual->prox;
     }
     else
     {
-        // Cenário B: O cara está no MEIO ou no FIM da fila
-        // A sombra solta a mão do atual e dá as mãos para quem vem depois do atual
+        // o cara está no meio ou no fim
         anterior->prox = atual->prox;
     }
-
-    // 6. Destrói o nó que foi isolado da lista
     delete atual;
-
-    // 7. Imprime sucesso
     saida << "UNFOLLOWED\n";
 }
 
@@ -543,24 +487,21 @@ void listarSeguindo(MiniRede &rede, int idUsuario, std::ostream &saida)
     }
 
     saida << "FOLLOWING_BEGIN\n";
-
+    //percorre a lista de seguidos e vai imprimindo a cada usuario que encontrar na lista usando o usuario por id 
     IntNode *atual = usuario->seguidos;
 
     while (atual != nullptr)
     {
-
-        // Pega o ID da lista e acha o objeto completo daquele usuário
         Usuario *usuarioEncontrado = UsuarioPorId(rede, atual->id);
 
         if (usuarioEncontrado != nullptr)
         {
-            // Imprime os dados usando a nova variável
             saida << "USER " << usuarioEncontrado->id << " "
                   << usuarioEncontrado->username << " "
                   << usuarioEncontrado->nomeCompleto << "\n";
         }
 
-        // Pula para o próximo ID da lista
+        // pula para o proximo id da lista
         atual = atual->prox;
     }
 
@@ -569,15 +510,12 @@ void listarSeguindo(MiniRede &rede, int idUsuario, std::ostream &saida)
 
 void cadastrarPublicacao(MiniRede &rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream &saida)
 {
-    // 1. Verificar se o autor existe ANTES de criar o post
     Usuario *autor = UsuarioPorId(rede, idAutor);
     if (autor == nullptr)
     {
         saida << "ERROR USER_NOT_FOUND\n"; //
         return;
     }
-
-    // 2. Verificar se o ID do post já existe na rede
     Publicacao *postExistente = PublicacaoPorId(rede, idPost);
     if (postExistente != nullptr)
     {
@@ -585,46 +523,43 @@ void cadastrarPublicacao(MiniRede &rede, int idPost, int idAutor, int timestamp,
         return;
     }
 
-    // 3. Se passou pelas validações, podemos criar o post na memória
+    //se passou pelos testes cria o post
     Publicacao *nova = new Publicacao;
     nova->id = idPost;
     nova->curtidas = 0;
     nova->idAutor = idAutor;
     nova->timestamp = timestamp;
-    strcpy(nova->texto, texto); // CORREÇÃO: Copiando a string corretamente
+    strcpy(nova->texto, texto); 
     nova->listaCurtidas = nullptr;
 
-    // Inserir na lista global da rede
+    //insere na lista global da rede
     nova->prox_global = rede.listaPublicacoes;
     rede.listaPublicacoes = nova;
 
-    // Inserir na lista de posts do autor
+    //insere na lista de posts do autor
     nova->prox_autor = autor->postsCriados;
     autor->postsCriados = nova;
-
-    // 4. Imprimir sucesso!
     saida << "POST_ADDED\n";
 }
 
 void curtirPublicacao(MiniRede &rede, int idUsuario, int idPost, std::ostream &saida)
 {
-    // 1. Verificar se o usuário que está curtindo existe ANTES de tudo
     Usuario *userCurtindo = UsuarioPorId(rede, idUsuario);
     if (userCurtindo == nullptr)
     {
-        saida << "ERROR USER_NOT_FOUND\n"; //
+        saida << "ERROR USER_NOT_FOUND\n"; 
         return;
     }
 
-    // 2. Achar post
+
     Publicacao *post = PublicacaoPorId(rede, idPost);
     if (post == nullptr)
     {
-        saida << "ERROR POST_NOT_FOUND\n"; // [cite: 81]
+        saida << "ERROR POST_NOT_FOUND\n"; 
         return;
     }
 
-    // 3. Descobrir se já foi curtida
+   
     bool ja_curtida = false;
     IntNode *atual = post->listaCurtidas;
     while (atual != nullptr)
@@ -643,24 +578,19 @@ void curtirPublicacao(MiniRede &rede, int idUsuario, int idPost, std::ostream &s
         return;
     }
 
-    // 4. Curtir
+    // curtir
     post->curtidas++;
 
     IntNode *nova_curtida = new IntNode;
     nova_curtida->id = idUsuario;
     nova_curtida->prox = post->listaCurtidas;
     post->listaCurtidas = nova_curtida;
-
-    // 5. Enviar Notificação para o Autor do Post
     notificarUsuario(rede, post->idAutor, idUsuario, idPost, NOTIF_LIKE);
-
-    // 6. Mensagem de Sucesso
     saida << "LIKED\n"; //
 }
 
 void consultarNotificacoes(MiniRede &rede, int idUsuario, int k, std::ostream &saida)
 {
-    // 1. Busca o usuário dono da fila de notificações
     Usuario *usuario = UsuarioPorId(rede, idUsuario);
 
     if (usuario == nullptr)
@@ -668,20 +598,16 @@ void consultarNotificacoes(MiniRede &rede, int idUsuario, int k, std::ostream &s
         saida << "ERROR USER_NOT_FOUND\n";
         return;
     }
-
-    // 2. Imprime o início do bloco de notificações
     saida << "NOTIFICATIONS_BEGIN\n";
 
     int contador = 0;
-
-    // 3. Loop: remove enquanto não atingir 'k' E a fila não estiver vazia
     while (contador < k && usuario->filaNotif.inicio != nullptr)
     {
 
-        // Pega o primeiro nó (o início da fila)
+        // pega  o início da fila
         Notificacao *noRemovido = usuario->filaNotif.inicio;
 
-        // 4. Verifica o tipo da notificação para imprimir no formato correto
+        //verifica o tipo da notificação 
         if (noRemovido->tipo == NOTIF_FOLLOW)
         {
             saida << "NOTIFICATION FOLLOW " << noRemovido->idOrigem << "\n";
@@ -695,23 +621,17 @@ void consultarNotificacoes(MiniRede &rede, int idUsuario, int k, std::ostream &s
             saida << "NOTIFICATION COMMENT " << noRemovido->idOrigem << " " << noRemovido->idPost << "\n";
         }
 
-        // Avança o início da fila para o próximo nó
+        // Avança o inicio da fila 
         usuario->filaNotif.inicio = usuario->filaNotif.inicio->prox;
 
-        // Se a fila ficou vazia após o avanço, o 'fim' também precisa apontar para nullptr
+        // se a fila ficou vazia após o avanço,faz o fim apontar pra null
         if (usuario->filaNotif.inicio == nullptr)
         {
             usuario->filaNotif.fim = nullptr;
         }
-
-        // 5. Deleta o nó antigo da memória
         delete noRemovido;
-
-        // Incrementa o contador para não rodar mais do que 'k' vezes
-        contador++;
+        contador++; //contador pra nao rodar mais que k vezes
     }
-
-    // 6. Imprime o fim do bloco
     saida << "NOTIFICATIONS_END\n";
 }
 
@@ -724,15 +644,13 @@ void gerarFeed(MiniRede &rede, int idUsuario, int k, std::ostream &saida)
         return;
     }
 
-    NoPublicacao *todosPosts = ListarPostsSeguindo(rede, usuario); // pega todos os posts dos usuários que ele segue e coloca numa lista encadeada de NoPublicacao
+    NoPublicacao *todosPosts = ListarPostsSeguindo(rede, usuario); 
+    NoPublicacao *postsEncontrados = SelecionarKPostsMaisRecentes(todosPosts, k);
+    liberarListaPublicacao(todosPosts); 
 
-    NoPublicacao *postsEncontrados = SelecionarKPostsMaisRecentes(todosPosts, k); // seleciona os 'k' posts mais recentes da lista encadeada de NoPublicacao (que tem os posts dos usuários que ele segue)
+    postsEncontrados = OrdenarPostsPorTimestamp(postsEncontrados); //ordena os posts por timestamp mais recentes primeiro
 
-    liberarListaPublicacao(todosPosts); // libera a lista encadeada de NoPublicacao que tinha todos os posts dos usuários que ele segue, pois não precisamos mais dela
-
-    postsEncontrados = OrdenarPostsPorTimestamp(postsEncontrados); // ordena os posts por timestamp decrescente (mais recentes primeiro)
-
-    // Imprimir os posts do feed
+    //imprimir os posts do feed
     saida << "FEED_BEGIN\n";
     imprimirXPosts(postsEncontrados, k, saida);
     saida << "FEED_END\n";
@@ -748,15 +666,14 @@ void listarTopPosts(MiniRede &rede, int k, std::ostream &saida)
         return;
     }
 
-    // achar as 'k' publicações com mais curtidas na lista global de publicações da rede
+    //acha as k publicações com mais curtidas na lista global de publicações da rede e ordena com Bubble Sort
 
-    NoPublicacao *k_mais_curtidas = SelecionarKPostsMaisCurtidos(rede.listaPublicacoes, k); // seleciona os 'k' posts mais curtidos da lista global de publicações da rede
+    NoPublicacao *k_mais_curtidas = SelecionarKPostsMaisCurtidos(rede.listaPublicacoes, k); 
+    k_mais_curtidas = OrdenarPostsPorCurtidas(k_mais_curtidas);  
 
-    k_mais_curtidas = OrdenarPostsPorCurtidas(k_mais_curtidas); // Ordenar os k mais curtidos por curtidas decrescente com Bubble Sort
-
-    // Imprimir os k mais curtidos
+    // imprime os k mais curtidos
     saida << "TOP_POSTS_BEGIN\n";
-    imprimirXPosts(k_mais_curtidas, k, saida); // imprime
+    imprimirXPosts(k_mais_curtidas, k, saida); 
     saida << "TOP_POSTS_END\n";
 
     liberarListaPublicacao(k_mais_curtidas);
@@ -768,14 +685,16 @@ void removerPost(MiniRede &rede, int idPost, std::ostream &saida)
     if (resultadoBusca == nullptr)
     {
         saida << "ERROR POST_NOT_FOUND\n";
-        return; // Post não encontrado, nada a remover
+        return; 
     }
+
+
     Publicacao *postAtual = resultadoBusca->post;
     Publicacao *postAnterior;
 
     if (resultadoBusca->prox == nullptr)
     {
-        postAnterior = nullptr; // O post a remover é o primeiro da lista
+        postAnterior = nullptr; // o post a remover é o primeiro da lista
     }
     else
     {
@@ -783,19 +702,19 @@ void removerPost(MiniRede &rede, int idPost, std::ostream &saida)
     }
     liberarListaPublicacao(resultadoBusca);
 
-    // 2. Remover da lista global
+    // remove da lista global
     if (postAnterior == nullptr)
     {
-        // O post a remover é o primeiro da lista
+        // o post a remover é o primeiro da lista
         rede.listaPublicacoes = postAtual->prox_global;
     }
     else
     {
-        // O post a remover está no meio ou no fim da lista
+        // o post a remover tá no meio ou no fim da lista
         postAnterior->prox_global = postAtual->prox_global;
     }
 
-    // 3. Remover da lista do autor
+    // remove da lista do autor
     Usuario *autor = UsuarioPorId(rede, postAtual->idAutor);
     if (autor != nullptr)
     {
@@ -822,8 +741,6 @@ void removerPost(MiniRede &rede, int idPost, std::ostream &saida)
     }
 
     saida << "POST_REMOVED\n";
-
-    // 4. Liberar a memória do post removido
     liberarListaIntNode(postAtual->listaCurtidas);
     delete postAtual;
 }
@@ -841,7 +758,6 @@ void removerPostMaisRecenteGlobal(MiniRede &rede, std::ostream &saida){
 
 void comentar(MiniRede &rede, int idUsuario, int idPost, int idComentario, const char texto[], std::ostream &saida)
 {
-    // Implementação similar a curtirPublicacao, mas criando um novo comentário e adicionando à lista de comentários do post
     Publicacao *post = PublicacaoPorId(rede, idPost);
     if (post == nullptr)
     {
@@ -864,8 +780,6 @@ void comentar(MiniRede &rede, int idUsuario, int idPost, int idComentario, const
     post->listaComentarios = novoComentario;
 
     saida << "COMMENT_ADDED\n";
-
-    // Enviar notificação para o autor do post
     notificarUsuario(rede, post->idAutor, idUsuario, idPost, NOTIF_COMMENT);
 }
 
@@ -937,7 +851,7 @@ void notificarUsuario(MiniRede &rede, int idUsuario, int idOrigem, int idPost, T
     novaNotif->idPost = idPost;
     novaNotif->prox = nullptr;
 
-    // Lógica de Fila (FIFO)
+    // logica de fila (fifo)
     if (usuario->filaNotif.inicio == nullptr)
     {
         usuario->filaNotif.inicio = novaNotif;
@@ -998,7 +912,7 @@ NoPublicacao *SelecionarKPosts(Publicacao *posts, int k, TipoBuscaPublicacao tip
         k_posts = novo_no;
         if (tipo == BUSCA_USUARIO)
         {
-            atual = atual->prox_autor; // Acessa o próximo post do mesmo autor usando prox_autor
+            atual = atual->prox_autor; // acessa o próximo post do mesmo autor usando prox_autor
         }
         else
         {
@@ -1010,12 +924,12 @@ NoPublicacao *SelecionarKPosts(Publicacao *posts, int k, TipoBuscaPublicacao tip
 }
 
 NoPublicacao *SelecionarKPostsMaisRecentes(NoPublicacao *posts, int k)
-{ // seleciona os 'k' posts mais recentes da lista encadeada de NoPublicacao (que tem os posts dos usuários que ele segue)
+{ // seleciona os 'k' posts mais recentes da lista encadeada de NoPublicacao,que tem os posts dos usuários que ele segue
     NoPublicacao *k_mais_recentes = nullptr;
     int contador = 0;
     NoPublicacao *atual = posts;
     while (atual != nullptr && contador < k)
-    { // Pega os 'k' primeiros posts da lista para começar a comparação
+    { // pega os 'k' primeiros posts da lista para começar a comparação
         NoPublicacao *novo_no = new NoPublicacao;
         novo_no->post = atual->post;
         novo_no->prox = k_mais_recentes;
@@ -1049,7 +963,7 @@ NoPublicacao *SelecionarKPostsMaisRecentes(NoPublicacao *posts, int k)
 }
 
 NoPublicacao *OrdenarPostsPorTimestamp(NoPublicacao *posts)
-{ // ordena os posts por timestamp decrescente (mais recentes primeiro) usando Bubble Sort
+{ // ordena os posts por timestamp decrescente ,mais recentes primeiro, usando Bubble Sort
     if (posts == nullptr)
         return nullptr;
 
@@ -1063,7 +977,7 @@ NoPublicacao *OrdenarPostsPorTimestamp(NoPublicacao *posts)
             if (ptr->post->timestamp < ptr->prox->post->timestamp ||
                 (ptr->post->timestamp == ptr->prox->post->timestamp && ptr->post->id > ptr->prox->post->id))
             {
-                // Troca os posts
+                // troca os posts
                 Publicacao *tempPost = ptr->post;
                 ptr->post = ptr->prox->post;
                 ptr->prox->post = tempPost;
@@ -1073,7 +987,7 @@ NoPublicacao *OrdenarPostsPorTimestamp(NoPublicacao *posts)
         }
     } while (trocou);
 
-    return posts; // Retorna a cabeça da lista, que agora está ordenada
+    return posts; 
 }
 
 NoPublicacao *SelecionarKPostsMaisCurtidos(Publicacao *posts, int k)
@@ -1082,7 +996,7 @@ NoPublicacao *SelecionarKPostsMaisCurtidos(Publicacao *posts, int k)
     int contador = 0;
     Publicacao *atual = posts;
     while (atual != nullptr && contador < k)
-    { // Pega os 'k' primeiros posts da lista para começar a comparação
+    { // pega os 'k' primeiros posts da lista para começar a comparação
         NoPublicacao *novo_no = new NoPublicacao;
         novo_no->post = atual;
         novo_no->prox = k_mais_curtidos;
@@ -1093,7 +1007,7 @@ NoPublicacao *SelecionarKPostsMaisCurtidos(Publicacao *posts, int k)
 
     while (atual != nullptr)
     {
-        // Acha o post com o menor número de curtidas na lista de 'k' mais curtidos
+        // acha o post com o menor número de curtidas na lista de 'k' mais curtidos
         NoPublicacao *menos_curtido = k_mais_curtidos;
         NoPublicacao *ptr = k_mais_curtidos;
         while (ptr != nullptr)
@@ -1104,7 +1018,7 @@ NoPublicacao *SelecionarKPostsMaisCurtidos(Publicacao *posts, int k)
             }
             ptr = ptr->prox;
         }
-        // Se o post atual tiver mais curtidas que o menos curtido, substitui
+        // se o post atual tiver mais curtidas que o menos curtido, substitui
         if (atual->curtidas > menos_curtido->post->curtidas ||
             (atual->curtidas == menos_curtido->post->curtidas && atual->id < menos_curtido->post->id))
         {
@@ -1117,7 +1031,7 @@ NoPublicacao *SelecionarKPostsMaisCurtidos(Publicacao *posts, int k)
 }
 
 NoPublicacao *OrdenarPostsPorCurtidas(NoPublicacao *posts)
-{ // Ordena os posts por curtidas decrescente usando Bubble Sort
+{ // ordena os posts por curtidas decrescente usando Bubble Sort
     if (posts == nullptr)
         return nullptr;
 
@@ -1140,7 +1054,7 @@ NoPublicacao *OrdenarPostsPorCurtidas(NoPublicacao *posts)
         }
     } while (trocou);
 
-    return posts; // Retorna a cabeça da lista, que agora está ordenada
+    return posts; // retorna a cabeça da lista, que agora ta ordenada
 }
 
 void liberarListaPublicacao(NoPublicacao *inicio)
@@ -1163,7 +1077,7 @@ Usuario *UsuarioPorId(MiniRede &rede, int id)
     {
         if (atual->user->id == id)
         {
-            return atual->user; // Encontrou, retorna o ponteiro para o usuário
+            return atual->user; 
         }
 
         if (id < atual->user->id)
@@ -1176,7 +1090,7 @@ Usuario *UsuarioPorId(MiniRede &rede, int id)
         }
     }
 
-    return nullptr; // Não encontrou
+    return nullptr; 
 }
 
 Usuario *UsuarioPorUsername(MiniRede &rede, const char username[])
@@ -1188,12 +1102,12 @@ Usuario *UsuarioPorUsername(MiniRede &rede, const char username[])
     {
         if (strcmp(atual->user->username, username) == 0)
         {
-            return atual->user; // Encontrou, retorna o ponteiro para o usuário
+            return atual->user; 
         }
         atual = atual->prox;
     }
 
-    return nullptr; // Não encontrou
+    return nullptr; 
 }
 
 Publicacao *PublicacaoPorId(MiniRede &rede, int idPost)
@@ -1209,7 +1123,7 @@ Publicacao *PublicacaoPorId(MiniRede &rede, int idPost)
 }
 
 NoPublicacao *AcharPublicacaoEanteriorPorId(MiniRede &rede, int idPost)
-{ // devolve o primeiro nó de uma lista com o post encontrado e o segundo nó com o post anterior ao encontrado (ou nullptr se for o primeiro da lista)
+{ // devolve o primeiro nó de uma lista com o post encontrado e o segundo nó com o post anterior ao encontrado ou nullptr se for o primeiro da lista
     Publicacao *post = rede.listaPublicacoes;
     Publicacao *postAnterior = nullptr;
 
@@ -1223,7 +1137,7 @@ NoPublicacao *AcharPublicacaoEanteriorPorId(MiniRede &rede, int idPost)
 
     if (post == nullptr)
     {
-        return nullptr; // Post não encontrado
+        return nullptr; // post não encontrado
     }
 
     NoPublicacao *resultado = new NoPublicacao;
@@ -1231,7 +1145,7 @@ NoPublicacao *AcharPublicacaoEanteriorPorId(MiniRede &rede, int idPost)
 
     if (postAnterior == nullptr)
     {
-        resultado->prox = nullptr; // O post encontrado é o primeiro da lista, não tem anterior
+        resultado->prox = nullptr; // o post encontrado é o primeiro da lista, não tem anterior
     }
     else
     {
@@ -1247,7 +1161,7 @@ NoPublicacao *AcharPublicacaoEanteriorPorId(MiniRede &rede, int idPost)
 void buscarPublicacoesPorPalavra(MiniRede &rede, const char palavra[], std::ostream &saida)
 {
     saida << "SEARCH_BEGIN\n";
-
+    //percorre a lsita de publicacoes global e usa o strstr para ver se a palavra esta dentro de um post
     Publicacao *atual = rede.listaPublicacoes;
     bool encontrou = false;
 
@@ -1275,79 +1189,70 @@ void buscarPublicacoesPorPalavra(MiniRede &rede, const char palavra[], std::ostr
 
 //***Liberar memória
 
-// Limpa qualquer lista encadeada feita de IntNode
 void liberarListaIntNode(IntNode *inicio)
 {
     while (inicio != nullptr)
     {
         IntNode *temp = inicio;
         inicio = inicio->prox;
-        delete temp; // Deleta a caixinha do nó
+        delete temp; 
     }
 }
 
-// Limpa a fila de notificações
 void liberarFilaNotificacoes(Notificacao *inicio)
 {
     while (inicio != nullptr)
     {
         Notificacao *temp = inicio;
         inicio = inicio->prox;
-        delete temp; // Deleta a caixinha da notificação
+        delete temp; 
     }
 }
 
-// Limpa a Árvore Binária (usando percurso Pós-Ordem: Esquerda, Direita, Raiz)
 void liberarArvore(NoUsuarioBST *raiz)
 {
+    // limpa a arvore binária usando percurso pos-ordem(esq,dir,raiz)
     if (raiz == nullptr)
         return;
-
-    // Primeiro limpa os filhos
     liberarArvore(raiz->esq);
     liberarArvore(raiz->dir);
-
-    // Depois limpa o usuário que está neste nó
     if (raiz->user != nullptr)
     {
-        // Limpa as listas internas do usuário antes de deletá-lo
+        // deleta as listas do usuario
         liberarListaIntNode(raiz->user->seguidos);
         liberarFilaNotificacoes(raiz->user->filaNotif.inicio);
 
         delete raiz->user;
     }
-
-    // Por fim, deleta o nó da árvore
     delete raiz;
 }
 
 void liberarTabelaHash(NoUsuarioHash *hashUsernames[])
 {
-    // Percorre cada uma das gavetas (índices) da tabela hash
+    // percorre cada uma das gavetas da tabela hash
     for (int i = 0; i < TAM_HASH; i++)
     {
         NoUsuarioHash *atual = hashUsernames[i];
 
-        // Limpa a lista encadeada (colisões) daquela gaveta específica
+        // limpa a lista encadeada de cada gaveta 
         while (atual != nullptr)
         {
             NoUsuarioHash *temp = atual;
             atual = atual->prox;
             delete temp;
         }
-
-        // Garante que a gaveta aponte para o vazio após ser limpa
         hashUsernames[i] = nullptr;
     }
 }
 
 void liberarPublicacoes(Publicacao *inicio)
 {
+    //percorre a lista de post globais usando uma temporaria para ir apagando e avançando
     while (inicio != nullptr)
     {
         Publicacao *temp = inicio;
-        inicio = inicio->prox_global;             // Avança para o próximo post na lista global
-        liberarListaIntNode(temp->listaCurtidas); // Limpa a lista de curtidas do post
-        delete temp;                              // Deleta o post
+        inicio = inicio->prox_global;             
+        liberarListaIntNode(temp->listaCurtidas); // limpa a lista de curtidas do post
+        delete temp;                              
     }
 }
