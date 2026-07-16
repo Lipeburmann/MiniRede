@@ -1,2 +1,15 @@
+# Ignorar arquivos executáveis do Windows
+*.exe
+# Ignorar arquivos de objeto (gerados na compilação)
+*.o
 
-minirede
+# Ignorar pastas de configuração do seu editor de código (VS Code, etc)
+.vscode/
+.idea/
+
+# Ignorar lixos do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Ignorar arquivos de saída gerados pelos testes
+saida_*.txt
