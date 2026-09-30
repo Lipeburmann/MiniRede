@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="MiniRede — rede social construída em C++ com estruturas de dados próprias.">
+  <title>MiniRede · C++ Social Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient one"></div><div class="ambient two"></div>
+  <header>
+    <a class="brand" href="#"><span class="brand-mark">M</span><span>mini<span>rede</span></span></a>
+    <div class="search"><svg viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg><input id="search" placeholder="Buscar publicações..."></div>
+    <div class="header-actions"><button class="icon-button" id="notifications" title="Notificações">♡<span id="notif-dot"></span></button><div class="profile-select"><div class="avatar" id="header-avatar">A</div><select id="active-user"></select></div></div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <nav>
+        <button class="nav-item active" data-view="home"><span>⌂</span> Início</button>
+        <button class="nav-item" data-view="top"><span>↗</span> Em alta</button>
+        <button class="nav-item" data-view="people"><span>◎</span> Pessoas</button>
+      </nav>
+      <button class="new-post" id="new-post">Criar publicação <span>＋</span></button>
+      <div class="engine-card"><div class="engine-icon">&lt;/&gt;</div><div><strong>Motor em C++</strong><p>BST · Hash · Filas · Listas</p></div><span class="live">LIVE</span></div>
+      <p class="sidebar-foot">Projeto acadêmico · Estruturas de Dados<br>Sem uso de STL no núcleo</p>
+    </aside>
+
+    <section class="content">
+      <div class="hero"><div><span class="eyebrow">SEU FEED</span><h1>Ideias que conectam.</h1><p>Uma rede social construída do zero, estrutura por estrutura.</p></div><div class="hero-art"><span></span><span></span><span></span></div></div>
+      <div class="composer" id="composer"><div class="avatar current-avatar">A</div><button id="composer-trigger">Compartilhe o que você está construindo...</button><button class="send" id="quick-post">↗</button></div>
+      <div class="section-title"><h2>Publicações recentes</h2><span id="post-count">0 publicações</span></div>
+      <div id="feed" class="feed"><div class="loading">Carregando a MiniRede...</div></div>
+    </section>
+
+    <aside class="rightbar">
+      <section class="panel"><div class="panel-head"><h3>Pessoas para conhecer</h3><button id="show-all">Ver todas</button></div><div id="people-list"></div></section>
+      <section class="panel rank-panel"><div class="panel-head"><h3>Em alta agora</h3><span>TOP 3</span></div><div id="ranking"></div></section>
+      <div class="stats"><div><strong id="stat-users">0</strong><span>pessoas</span></div><div><strong id="stat-posts">0</strong><span>posts</span></div><div><strong id="stat-ops">0</strong><span>operações</span></div></div>
+      <button class="reset" id="reset">↻ Restaurar demonstração</button>
+    </aside>
+  </main>
+
+  <dialog id="post-modal"><form method="dialog"><div class="modal-head"><div><span class="eyebrow">NOVA IDEIA</span><h2>Criar publicação</h2></div><button class="close" value="cancel">×</button></div><textarea id="post-text" maxlength="279" placeholder="No que você está pensando?"></textarea><div class="modal-foot"><span id="char-count">0 / 279</span><button id="publish" value="default">Publicar <span>↗</span></button></div></form></dialog>
+  <dialog id="user-modal"><form method="dialog"><div class="modal-head"><div><span class="eyebrow">NOVA PESSOA</span><h2>Criar perfil</h2></div><button class="close" value="cancel">×</button></div><label>Nome completo<input id="user-name" required placeholder="Ada Lovelace"></label><label>Username<input id="username" required placeholder="ada"></label><div class="modal-foot"><span>O ID é gerado automaticamente</span><button id="create-user" value="default">Criar perfil</button></div></form></dialog>
+  <div id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
